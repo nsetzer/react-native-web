@@ -20,9 +20,9 @@ export class Page1 extends React.Component {
 
                 <TextInput
                     style={{height: 100, width: '100%', borderColor: 'gray', borderWidth: 1}}
-                    onChangeText={((text) => {
+                    onChangeText={(text) => {
                         this.props.exampleAction(text)
-                    }).bind(this)}
+                    }}
                 />
 
                 <Text>

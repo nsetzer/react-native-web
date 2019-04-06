@@ -1,6 +1,6 @@
 
 import React from "react";
-import { View, Button , Text, TextInput, TouchableOpacity, ScrollView, Image } from "react-native";
+import { View, Button , Text} from "react-native";
 
 import { connect } from "react-redux";
 
