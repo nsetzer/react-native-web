@@ -65,12 +65,6 @@ export default class App extends React.Component {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#FFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    // Add a margin to push the page content below
-    // the top bar on android
     marginTop: Constants.statusBarHeight
   },
 });

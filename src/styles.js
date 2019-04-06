@@ -3,10 +3,7 @@ import { StyleSheet } from 'react-native';
 //Platform.OS: ios, android, web
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   row: {
     flexDirection: 'row',
@@ -15,7 +12,12 @@ const styles = StyleSheet.create({
   },
   rowItem: {
     backgroundColor: '#803030'
-  }
+  },
+  appIntro: {
+        flex: 3,
+        fontSize: 30,
+        textAlign: "center"
+    }
 });
 
 export default styles;

@@ -3,6 +3,7 @@
   "scripts": {
     "web": "react-scripts start",
     "build-web": "react-scripts build",
+    "serve-web": "serve -s build",
     "test-web": "react-scripts test --env=jsdom",
     "start": "expo start",
     "android": "expo start --android",

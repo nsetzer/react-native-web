@@ -1,12 +1,14 @@
 import React from 'react';
 import 'resize-observer-polyfill/dist/ResizeObserver.global'
-import { Platform, Text, View, Button } from 'react-native';
+import { Platform, Text, View, Button, KeyboardAvoidingView } from 'react-native';
 
 import styles from './styles'
 
 import { Router, Route, Switch } from './components/Route'
 
 import HeaderPage from './header'
+import Page1 from './pages/page1'
+import Page2 from './pages/page2'
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -40,12 +42,12 @@ export default class App extends React.Component {
         <ErrorBoundary>
         <Router>
         <HeaderPage />
-        <View style={styles.container}>
-        <Switch>
-            <Route path='/p1'><Text> Page 1</Text></Route>
-            <Route path='/p2'><Text> Page 2</Text></Route>
-            <Route path='/p3'><Text> Page 3</Text></Route>
-        </Switch>
+        <View>
+            <Switch>
+                <Route path='/p1'><Page1 /></Route>
+                <Route path='/p2'><Page2 /></Route>
+                <Route path='/p3'><Text> Page 3</Text></Route>
+            </Switch>
         </View>
         </Router>
         </ErrorBoundary>
