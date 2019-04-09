@@ -23,10 +23,12 @@ const styles = StyleSheet.create({
 export class HeaderPage extends React.Component {
     render() {
         const pathname = this.props.location;
+        const username = this.props.username;
+        const token = this.props.token;
         return (
                 <View style={styles.container}>
                 <Text>Welcome to React Native Web️ </Text>
-                <Text> {pathname} </Text>
+                <Text> {pathname + " : " + username + " : " + token} </Text>
 
                 <View style={styles.row}>
                     <Button title='Route1' onPress={()=>{this.props.pushLocation('/u/p1')}} />
@@ -39,8 +41,12 @@ export class HeaderPage extends React.Component {
 }
 
 const mapStateToProps = state => (
+    console.log("HEADER =---------------------"),
+    console.log(state),
 {
-    location: state.route.location
+    location: state.route.location,
+    username: state.userLogin.username,
+    token: state.userLogin.token
 });
 
 const bindActions = dispatch => ({

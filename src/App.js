@@ -3,6 +3,7 @@ import 'resize-observer-polyfill/dist/ResizeObserver.global'
 import { View, StyleSheet } from 'react-native';
 
 import { Router, Route, Switch } from './components/Route'
+import { AuthenticatedComponent, NotAuthenticatedComponent} from './components/Auth'
 
 
 import LoginPage from './pages/login'
@@ -59,9 +60,16 @@ export default class App extends React.Component {
 
         <View style={styles2.container}>
             <Switch redirect='/'>
-                <Route name='app-switch' path='/login'><LoginPage /></Route>
-                <Route name='app-switch' path='/u/:path*'><MainPage /></Route>
-                <Route name='app-switch' path='/:path*'><HomePage /></Route>
+                <Route name='app-switch' path='/login'>
+                    <NotAuthenticatedComponent redirect='/u/p1'>
+                        <LoginPage />
+                    </NotAuthenticatedComponent>
+                </Route>
+                <Route name='app-switch' path='/u/:path*'>
+                    <AuthenticatedComponent redirect='/login'>
+                        <MainPage />
+                    </AuthenticatedComponent>
+                </Route>
                 <Route name='app-switch' path='/'><HomePage /></Route>
             </Switch>
         </View>

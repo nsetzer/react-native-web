@@ -47,7 +47,7 @@ export class MainPage extends React.Component {
             <ScrollView stickyHeaderIndices={[0]}>
                 <HeaderPage />
 
-                <Switch  redirect='/'>
+                <Switch redirect='/u/p1'>
                     <Route name='main-switch' path='/u/p1'><Page1/></Route>
                     <Route name='main-switch' path='/u/p2'><Page2/></Route>
                     <Route name='main-switch' path='/u/p3'><Page3/></Route>

@@ -6,11 +6,13 @@ import { all } from 'redux-saga/effects';
 // applied to the saga, not the saga itself.
 
 import dataSaga from './dataSaga'
+import userLoginSaga from './userLoginSaga'
 
  function* rootSaga () {
     yield all([
         // add an entry for every saga to listen for
         dataSaga,
+        userLoginSaga
     ]);
 }
 

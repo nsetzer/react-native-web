@@ -15,6 +15,7 @@ import {
 import { connect } from "react-redux";
 
 import { initLocation, pushLocation } from "../redux/actions/routeAction";
+import { userLogin } from "../redux/actions/userLoginAction";
 
 // define your styles
 const styles1 = StyleSheet.create({
@@ -84,10 +85,43 @@ const styles2 = StyleSheet.create({
 
 
 class ILoginForm extends React.Component {
+
+    constructor(props) {
+      super(props);
+
+      this.state = {
+          username: '',
+          password: '',
+      }
+    }
+
+    componentWillMount() {
+        //if (this.props.isAuthenticated) {
+        //  this.props.pushLocation('/u/p1')
+        //}
+    }
+
+    componentDidUpdate() {
+        if (this.props.isAuthenticated) {
+          this.props.pushLocation('/u/p1')
+        }
+    }
+
+    onUsernameChange(event) {
+      this.setState({username: event.target.value})
+      console.log(event.target.value)
+    }
+
+    onPasswordChange(event) {
+      this.setState({password: event.target.value})
+      console.log(event.target.value)
+    }
+
     render() {
         return (
             <View style={styles1.container}>
                 <StatusBar barStyle="light-content"/>
+                {(this.props.status!==null)?<Text>{this.props.status}</Text>:null}
                 <TextInput style = {styles1.input}
                             autoCapitalize="none"
                             onSubmitEditing={() => this.passwordInput.focus()}
@@ -95,17 +129,19 @@ class ILoginForm extends React.Component {
                             keyboardType='email-address'
                             returnKeyType="next"
                             placeholder='Email'
+                            onChange={this.onUsernameChange.bind(this)}
                             placeholderTextColor='rgba(225,225,225,0.7)'/>
 
                 <TextInput style = {styles1.input}
                            returnKeyType="go" ref={(input)=> this.passwordInput = input}
                            placeholder='Password'
                            placeholderTextColor='rgba(225,225,225,0.7)'
+                           onChange={this.onPasswordChange.bind(this)}
                            secureTextEntry/>
 
                 <Button
                     title='LOGIN'
-                    onPress={() => {this.props.pushLocation("/u/p1")}}>
+                    onPress={() => {this.props.userLogin(this.state.username, this.state.password)}}>
                 </Button>
             </View>
         );
@@ -132,8 +168,11 @@ class ILoginPage extends React.Component {
 }
 
 const mapStateToProps = state => ({
-    location: state.route.location,
-    authenticated: state.route.authenticated
+    //location: state.route.location,
+    //authenticated: state.route.authenticated
+    isAuthenticating: state.userLogin.isAuthenticating,
+    isAuthenticated: state.userLogin.isAuthenticated,
+    status: state.userLogin.status,
 });
 
 const bindActions = dispatch => ({
@@ -142,6 +181,9 @@ const bindActions = dispatch => ({
     },
     initLocation: (location) => {
         dispatch(initLocation(location))
+    },
+    userLogin: (username, password) => {
+        dispatch(userLogin(username, password))
     }
 });
 
