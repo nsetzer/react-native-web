@@ -1,16 +1,43 @@
 
 import React from "react";
-import { View, Text, TextInput, ScrollView } from "react-native";
+import { Text, TextInput, View } from "react-native";
 
 import styles from '../styles'
 import { connect } from "react-redux";
 import { exampleAction } from "../redux/actions/exampleAction";
 
 export class Page1 extends React.Component {
+
+
+    constructor(props) {
+        super(props);
+        console.log("page 1 constructor")
+    }
+
+    componentWillMount() {
+        console.log("page 1 componentWillMount")
+    }
+
+    componentDidMount() {
+        console.log("page 1 componentDidMount")
+    }
+
+    componentWillUnmount() {
+        console.log("page 1 componentWillUnmount")
+    }
+
+    componentWillReceiveProps() {
+        console.log("page 1 componentWillReceiveProps")
+    }
+
+    componentDidUpdate() {
+        console.log("page 1 componentDidUpdate")
+    }
+
     render() {
 
         return (
-            <ScrollView>
+            <View>
 
                 <Text>Redux Examples</Text>
 
@@ -65,7 +92,7 @@ export class Page1 extends React.Component {
                     {"\n"} new line
                 </Text>
 
-            </ScrollView>
+            </View>
         )
     }
 }

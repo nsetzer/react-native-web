@@ -2,11 +2,36 @@
 import React from "react";
 import { View, Text, Button } from "react-native";
 
-import styles from '../styles'
 import { connect } from "react-redux";
 import { fetchData } from '../redux/actions/dataAction'
 
 export class Page2 extends React.Component {
+
+    constructor(props) {
+        super(props);
+        console.log("page 2 constructor")
+    }
+
+    componentWillMount() {
+        console.log("page 1 componentWillMount")
+    }
+
+    componentDidMount() {
+        console.log("page 2 componentDidMount")
+    }
+
+    componentWillUnmount() {
+        console.log("page 2 componentWillUnmount")
+    }
+
+    componentWillReceiveProps() {
+        console.log("page 2 componentWillReceiveProps")
+    }
+
+    componentDidUpdate() {
+        console.log("page 2 componentDidUpdate")
+    }
+
     render() {
         return (
             <View>
@@ -35,7 +60,6 @@ export class Page2 extends React.Component {
         )
     }
 }
-
 
 function mapStateToProps (state) {
   return {

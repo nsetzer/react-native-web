@@ -2,12 +2,37 @@
 import React from "react";
 import { View, Text, Button } from "react-native";
 
-import styles from '../styles'
 import { connect } from "react-redux";
 import { setAuthenticated, pushLocation, initLocation } from '../redux/actions/routeAction'
 import { Switch, Route } from '../components/Route'
 
 export class Page3 extends React.Component {
+
+    constructor(props) {
+        super(props);
+        console.log("page 3 constructor")
+    }
+
+    componentWillMount() {
+        console.log("page 1 componentWillMount")
+    }
+
+    componentDidMount() {
+        console.log("page 3 componentDidMount")
+    }
+
+    componentWillUnmount() {
+        console.log("page 3 componentWillUnmount")
+    }
+
+    componentWillReceiveProps() {
+        console.log("page 3 componentWillReceiveProps")
+    }
+
+    componentDidUpdate() {
+        console.log("page 3 componentDidUpdate")
+    }
+
     render() {
       // , this.props.setAuthenticated(!this.props.authenticated)
         return (
@@ -26,10 +51,9 @@ export class Page3 extends React.Component {
 
                 <Text>User Is{this.props.authenticated?"":" Not"} Authenticated </Text>
                 <Text>---</Text>
-                <>//show the the first page only if authenticated</>
                 <Switch>
-                  <Route auth path='/p3'><Text>User Is Authenticated</Text></Route>
-                  <Route path='/p3'><Text>User Is Not Authenticated</Text></Route>
+                  <Route auth path='/u/p3'><Text>User Is Authenticated</Text></Route>
+                  <Route path='/u/p3'><Text>User Is Not Authenticated</Text></Route>
                 </Switch>
             </View>
         )

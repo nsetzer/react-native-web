@@ -5,9 +5,12 @@
     "build-web": "react-scripts build",
     "serve-web": "serve -s build",
     "test-web": "react-scripts test --env=jsdom",
-    "start": "expo start",
     "android": "expo start --android",
+    "prod-android": "expo start --no-dev --no-minify --android",
+    "build-android": "expo build:android",
     "ios": "expo start --ios",
+    "build-ios": "expo build:ios",
+    "start": "expo start",
     "eject": "expo eject"
   },
   "dependencies": {
@@ -21,6 +24,9 @@
     "redux": "^4.0.1",
     "redux-saga": "^1.0.2",
     "resize-observer-polyfill": "^1.5.1"
+  },
+  "resolutions": {
+    "uglify-es": "3.3.4"
   },
   "devDependencies": {
     "babel-preset-expo": "^5.0.0"

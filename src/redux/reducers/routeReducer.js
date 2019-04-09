@@ -9,8 +9,10 @@ import {
 
 
 const INITIAL_STATE = {
+    'initialized': false,
     'location': '/',
-    'authenticated': false
+    'authenticated': false,
+    history: []
 }
 
 export default function(state = INITIAL_STATE, action = {}) {
@@ -24,12 +26,18 @@ export default function(state = INITIAL_STATE, action = {}) {
             console.log("init:" + action.payload);
             return {
                 ...state,
+                initialized: true,
                 location: action.payload,
             }
         case ROUTE_PUSH_ACTION:
 
             if (Platform.OS === 'web') {
                 window.history.pushState(null, '', action.payload);
+            } else {
+                // PUSH
+                // [action.payload].concat(state.history).slice(0, MAX_LENGTH)
+                // POP
+                // state.history.slice(1, MAX_LENGTH)
             }
             console.log("push:" + action.payload);
             return {

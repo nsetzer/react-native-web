@@ -1,15 +1,13 @@
 import React from 'react';
 import 'resize-observer-polyfill/dist/ResizeObserver.global'
-import { Text, View, Button } from 'react-native';
-
-import styles from './styles'
+import { View, StyleSheet } from 'react-native';
 
 import { Router, Route, Switch } from './components/Route'
 
-import HeaderPage from './header'
-import Page1 from './pages/page1'
-import Page2 from './pages/page2'
-import Page3 from './pages/page3'
+
+import LoginPage from './pages/login'
+import HomePage from './pages/home'
+import MainPage from './pages/main'
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -37,19 +35,34 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+const styles2 = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#FFCCCC',
+        height: '100%',
+        width: '100%'
+    },
+});
+
 export default class App extends React.Component {
   render() {
+
+      // TODO: investigate default route bug
+      // a route "/" causes the login page to fail to render
+      // a route "/:path*" allows the login page to render
+      // two routes "/:path*" then "/" allows login page to render
+      // Note: this may be a bug on calling the constructor after
+      // a route change
       return (
         <ErrorBoundary>
         <Router>
-        <HeaderPage />
-        <View>
-            <Switch>
-                <Route path='/p1'><Page1 /></Route>
-                <Route path='/p2'><Page2 /></Route>
-                <Route path='/p3'><Page3 /></Route>
-                <Route path='/:default*'><Text>Default1</Text></Route>
-                <Route path='/'><Text>Default2</Text></Route>
+
+        <View style={styles2.container}>
+            <Switch redirect='/'>
+                <Route name='app-switch' path='/login'><LoginPage /></Route>
+                <Route name='app-switch' path='/u/:path*'><MainPage /></Route>
+                <Route name='app-switch' path='/:path*'><HomePage /></Route>
+                <Route name='app-switch' path='/'><HomePage /></Route>
             </Switch>
         </View>
         </Router>
