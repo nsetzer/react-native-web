@@ -10,13 +10,13 @@ import { Switch, Route } from '../components/Route'
 
 const styles = StyleSheet.create({
   listItemContainer: {
-    padding: '1em',
+    padding: 10,
     borderColor: '#000000',
-    borderWidth: '1px',
-    marginTop: "0.5em",
-    marginLeft: "1em",
-    marginRight: "1em",
-    marginBottom: "0.5em",
+    borderWidth: 1,
+    marginTop: 5,
+    marginLeft: 10,
+    marginRight: 10,
+    marginBottom: 5,
     backgroundColor: "#FFFFFF",
     shadowOffset: {  width: 4,  height: 4,  },
     shadowColor: '#000000',
@@ -28,12 +28,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
   },
   summaryContainer: {
-    paddingLeft: '1em',
-    paddingRight: '1em',
+    paddingLeft: 10,
+    paddingRight: 10,
   },
   footer: {
-    height: "100px",
-    width: "100%",
+    height: 100,
+    width: '100%',
     backgroundColor: "rgba(200, 0, 0, .3)"
   }
 });

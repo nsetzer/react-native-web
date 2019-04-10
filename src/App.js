@@ -1,6 +1,6 @@
 import React from 'react';
 import 'resize-observer-polyfill/dist/ResizeObserver.global'
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 
 import { Router, Route, Switch } from './components/Route'
 import { AuthenticatedComponent, NotAuthenticatedComponent} from './components/Auth'
@@ -13,23 +13,28 @@ import MainPage from './pages/main'
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null };
   }
 
   static getDerivedStateFromError(error) {
-    // Update state so the next render will show the fallback UI.
-    return { hasError: true };
+    console.log("updating state from error")
+    return { hasError: true, error: error };
   }
 
   componentDidCatch(error, info) {
-    // You can also log the error to an error reporting service
-    //logErrorToMyService(error, info);
+    console.log("did catch an error")
+    console.error(error)
+    this.setState({ hasError: true, error: error })
   }
 
   render() {
     if (this.state.hasError) {
-      // You can render any custom fallback UI
-      return <h1>Something went wrong.</h1>;
+      return (
+        <View>
+            <Text>Something went wrong.</Text>
+            <Text>{this.state.error}</Text>
+        </View>
+      );
     }
 
     return this.props.children;
