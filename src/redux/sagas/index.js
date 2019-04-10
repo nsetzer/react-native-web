@@ -7,12 +7,15 @@ import { all } from 'redux-saga/effects';
 
 import dataSaga from './dataSaga'
 import userLoginSaga from './userLoginSaga'
+import {userNoteFetch, userNoteGetContent} from './userNoteSaga'
 
  function* rootSaga () {
     yield all([
         // add an entry for every saga to listen for
         dataSaga,
-        userLoginSaga
+        userLoginSaga,
+        userNoteFetch,
+        userNoteGetContent
     ]);
 }
 

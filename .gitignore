@@ -7,3 +7,5 @@ npm-debug.*
 *.mobileprovision
 yarn.lock
 build/
+yarn-error.log
+

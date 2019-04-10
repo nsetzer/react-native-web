@@ -1,68 +1,92 @@
-import { USER_NOTE_FETCH_UPDATE, USER_NOTE_FETCH, USER_NOTE_SET_SUMMARY } from '../constants'
+import {
+
+  USER_NOTE_FETCH_BEGIN,
+  USER_NOTE_FETCH_SUCCESS,
+  USER_NOTE_FETCH_ERROR,
+  USER_NOTE_BEGIN_CONTENT,
+  USER_NOTE_SET_CONTENT,
+  USER_NOTE_CONTENT_ERROR,
+} from '../constants'
+
+function newNote() {
+  return {loading: false, loaded: false, error: null, text: ''}
+}
 
 const INITIAL_STATE = {
-  // note-identifier to note title
-  notes: {
-      'note000': 'Grocery List',
-      'note001': 'Favorite Color List',
-      'note002': 'Favorite Animal List',
-      'note003': 'Video Games List',
-      'note004': 'TODO',
-      'note005': 'Chapter1',
-      'note006': 'TestNote1',
-      'note007': 'TestNote2',
-      'note008': 'TestNote3',
-      'note009': 'TestNote4',
-      'note010': 'TestNote5',
-  },
+  // note content is being loaded
+  loading: false,
+  // note content has been loaded
+  loaded: false,
+  // error receiving notes
+  error: null,
+
+  // note note-identifier to note title
+  notes: {},
   // note-identifier to note content
-  content: {
-    'note000': {loading: false, loaded: true, text: '1. eggs\n2. milk\n3. bread'},
-    'note001': {loading: false, loaded: true, text: '1. red\n2. blue\n3. green\n4.yellow\n5.purple'},
-    'note002': {loading: false, loaded: true, text: '1. dog\n2. cat\n3. parrot'},
-    'note003': {loading: false, loaded: true, text: '1. Zelda\n2. Mario\n3. Yoshi'},
-    'note004': {loading: false, loaded: true, text: 'do the laundry\nfile taxes'},
-    'note005': {loading: false, loaded: true, text: 'it was the best of times it was the blurst of times'},
-    'note006': {loading: false, loaded: true, text: 'line0\nline1\nline2\nline3\nline4\n'},
-    'note007': {loading: false, loaded: true, text: 'line0\nline1\nline2\nline3\nline4\n'},
-    'note008': {loading: false, loaded: true, text: 'line0\nline1\nline2\nline3\nline4\n'},
-    'note009': {loading: false, loaded: true, text: 'line0\nline1\nline2\nline3\nline4\n'},
-    'note010': {loading: false, loaded: true, text: 'line0\nline1\nline2\nline3\nline4\n'},
-  },
-  // note-identifier to note content summary
-  // summaries are 5 lines, maximum 140 characters
-  // whichever comes first
-  summary: {
-    'note000': '1. eggs\n2. milk\n3. bread',
-    'note001': '1. red\n2. blue\n3. green\n...',
-    'note002': '1. dog\n2. cat\n3. parrot',
-    'note003': '1. Borderlands\n2. Zelda\n3. Mario',
-    'note004': 'do the laundry\nfile taxes',
-    'note005': 'it was the best of times...',
-    'note006': 'line0\nline1\nline2\nline3\nline4\n',
-    'note007': 'line0\nline1\nline2\nline3\nline4\n',
-    'note008': 'line0\nline1\nline2\nline3\nline4\n',
-    'note009': 'line0\nline1\nline2\nline3\nline4\n',
-    'note010': 'line0\nline1\nline2\nline3\nline4\n',
-  }
+  content: {},
 }
 
 export default function userReducer (state = INITIAL_STATE, action) {
+
+  var obj = {}
+
   switch (action.type) {
-    case USER_NOTE_FETCH_UPDATE:
+    case USER_NOTE_FETCH_BEGIN:
       return {
         ...state,
-        notes: action.payload.notes,
+        loading: true,
+        laoded: false,
+        error: null,
+        notes: {},
+        content: {}
       }
-    case USER_NOTE_FETCH:
+
+    // A user requested the list of notes
+    // the request completed successfully
+    case USER_NOTE_FETCH_SUCCESS:
+      var content = Object.keys(action.notes).reduce(
+          (obj, x) => Object.assign(obj, { [x]: newNote() }), {}
+      )
       return {
         ...state,
-        content: {...state.content, ...action.payload.content}
+        loading: false,
+        loaded: true,
+        error: null,
+        notes: action.notes,
+        content: content
       }
-    case USER_NOTE_SET_SUMMARY:
+    // A user requested the list of notes
+    // the request failed to complete for some reason
+    case USER_NOTE_FETCH_ERROR:
       return {
         ...state,
-        summary: {...state.summary, ...action.payload.summary}
+        loading: false,
+        laoded: false,
+        notes: [],
+        content: {},
+        error: action.status
+      }
+
+    //  User has requested the content body of a note
+    case USER_NOTE_BEGIN_CONTENT:
+      obj[action.uid] = action.content
+      return {
+        ...state,
+        content: {...state.content, ...obj}
+      }
+    //  the request completed successfully
+    case USER_NOTE_SET_CONTENT:
+      obj[action.uid] = action.content
+      return {
+        ...state,
+        content: {...state.content, ...obj}
+      }
+    //  the request failed successfully
+    case USER_NOTE_CONTENT_ERROR:
+      obj[action.uid] = action.content
+      return {
+        ...state,
+        content: {...state.content, ...obj}
       }
     default:
       return state

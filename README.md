@@ -56,3 +56,5 @@ warning " > @babel/plugin-proposal-decorators@7.4.0" has unmet peer dependency "
 warning " > @babel/plugin-transform-flow-strip-types@7.4.0" has unmet peer dependency "@babel/core@^7.0.0-0".
 warning " > @babel/plugin-transform-runtime@7.4.3" has unmet peer dependency "@babel/core@^7.0.0-0".
 warning " > react-native-web@0.11.2" has incorrect peer dependency "react@>=16.5.1".
+
+https://github.com/facebook/react-native/issues/20150

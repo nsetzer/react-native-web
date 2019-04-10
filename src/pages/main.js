@@ -1,9 +1,8 @@
 
 import React from "react";
-import { View, Text, TextInput, ScrollView } from "react-native";
+import { View, Text, TextInput, ScrollView, StyleSheet } from "react-native";
 import { Router, Route, Switch } from '../components/Route'
 
-import styles from '../styles'
 import { connect } from "react-redux";
 
 import HeaderPage from './header'
@@ -12,6 +11,13 @@ import Page1 from './page1'
 import Page2 from './page2'
 import Page3 from './page3'
 import Page4 from './page4'
+import Page4Edit from './page4edit'
+
+const styles = StyleSheet.create({
+  container: {
+    height: '100%',
+  }
+});
 
 export class MainPage extends React.Component {
 
@@ -45,7 +51,7 @@ export class MainPage extends React.Component {
     render() {
 
         return (
-            <ScrollView stickyHeaderIndices={[0]}>
+            <ScrollView stickyHeaderIndices={[0]} contentContainerStyle={{ flex: 1 }}>
                 <HeaderPage />
 
                 <Switch redirect='/u/p1'>
@@ -53,6 +59,7 @@ export class MainPage extends React.Component {
                     <Route name='main-switch' path='/u/p2'><Page2/></Route>
                     <Route name='main-switch' path='/u/p3'><Page3/></Route>
                     <Route name='main-switch' path='/u/p4'><Page4/></Route>
+                    <Route name='main-switch' path='/u/p4/:uid'><Page4Edit/></Route>
                 </Switch>
             </ScrollView>
         )

@@ -284,7 +284,7 @@ class IRoute extends React.Component {
         const childrenWithProps = React.Children.map(
             this.props.children,
             child => React.isValidElement(child)?React.cloneElement(
-                child, {route: route}):child
+                child, route):child
         );
 
         // React.createElement(this.props.component, {route: route})

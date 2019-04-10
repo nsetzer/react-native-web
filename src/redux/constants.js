@@ -16,6 +16,16 @@ export const USER_AUTH_FAIL = 'USER_AUTH_FAIL'
 export const USER_REGISTER = 'USER_REGISTER'
 
 
+// notes have two basic actions
+// get the list of notes from the server
+// for an individual note, get the content on-demand
+
 export const USER_NOTE_FETCH = 'USER_NOTES_FETCH'
-export const USER_NOTE_FETCH_UPDATE = 'USER_NOTE_FETCH_UPDATE'
-export const USER_NOTE_SET_SUMMARY = 'USER_NOTE_SET_SUMMARY'
+export const USER_NOTE_FETCH_BEGIN = 'USER_NOTE_FETCH_BEGIN'
+export const USER_NOTE_FETCH_SUCCESS = 'USER_NOTE_FETCH_SUCCESS'
+export const USER_NOTE_FETCH_ERROR = 'USER_NOTE_FETCH_ERROR'
+
+export const USER_NOTE_REQUEST_CONTENT = 'USER_NOTE_REQUEST_CONTENT'
+export const USER_NOTE_BEGIN_CONTENT = 'USER_NOTE_BEGIN_CONTENT'
+export const USER_NOTE_SET_CONTENT = 'USER_NOTE_SET_CONTENT'
+export const USER_NOTE_CONTENT_ERROR = 'USER_NOTE_CONTENT_ERROR'
