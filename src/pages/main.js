@@ -11,6 +11,7 @@ import HeaderPage from './header'
 import Page1 from './page1'
 import Page2 from './page2'
 import Page3 from './page3'
+import Page4 from './page4'
 
 export class MainPage extends React.Component {
 
@@ -51,6 +52,7 @@ export class MainPage extends React.Component {
                     <Route name='main-switch' path='/u/p1'><Page1/></Route>
                     <Route name='main-switch' path='/u/p2'><Page2/></Route>
                     <Route name='main-switch' path='/u/p3'><Page3/></Route>
+                    <Route name='main-switch' path='/u/p4'><Page4/></Route>
                 </Switch>
             </ScrollView>
         )

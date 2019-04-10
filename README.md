@@ -23,3 +23,7 @@ A full list of the scripts defined in `package.json` is shown below.
   - [Google Pages Live Demo](https://itnext.io/so-you-want-to-host-your-single-age-react-app-on-github-pages-a826ab01e48)
   - [Revist uglify-es work around](https://github.com/facebook/react-native/issues/17348)
 
+##
+
+### debug
+    adb logcat -s ReactNativeJS

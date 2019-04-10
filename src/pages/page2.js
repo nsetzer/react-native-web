@@ -13,7 +13,7 @@ export class Page2 extends React.Component {
     }
 
     componentWillMount() {
-        console.log("page 1 componentWillMount")
+        console.log("page 2 componentWillMount")
     }
 
     componentDidMount() {

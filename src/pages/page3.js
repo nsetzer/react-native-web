@@ -14,7 +14,7 @@ export class Page3 extends React.Component {
     }
 
     componentWillMount() {
-        console.log("page 1 componentWillMount")
+        console.log("page 3 componentWillMount")
     }
 
     componentDidMount() {

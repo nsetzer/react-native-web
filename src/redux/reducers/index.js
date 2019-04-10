@@ -8,6 +8,7 @@ import example from './exampleReducer';
 import appData from './dataReducer'
 import route from './routeReducer'
 import userLogin from './userLoginReducer'
+import userNote from './userNoteReducer'
 
 // the name here is used as the top level key
 // in the state dictionary. the value of that key will
@@ -18,7 +19,8 @@ const reducers = {
     example,
     appData,
     route,
-    userLogin
+    userLogin,
+    userNote
 };
 
 export default combineReducers(reducers)
