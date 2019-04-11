@@ -1,15 +1,20 @@
 import {
 
-  USER_NOTE_FETCH_BEGIN,
+  USER_NOTE_FETCH,
   USER_NOTE_FETCH_SUCCESS,
   USER_NOTE_FETCH_ERROR,
-  USER_NOTE_BEGIN_CONTENT,
+
+  USER_NOTE_REQUEST_CONTENT,
   USER_NOTE_SET_CONTENT,
   USER_NOTE_CONTENT_ERROR,
+
+  USER_NOTE_SAVE,
+  USER_NOTE_SAVE_SUCCESS,
+  USER_NOTE_SAVE_ERROR,
 } from '../constants'
 
 function newNote() {
-  return {loading: false, loaded: false, error: null, text: ''}
+  return {loading: false, loaded: false, error: null, saving: false, text: ''}
 }
 
 const INITIAL_STATE = {
@@ -31,11 +36,11 @@ export default function userReducer (state = INITIAL_STATE, action) {
   var obj = {}
 
   switch (action.type) {
-    case USER_NOTE_FETCH_BEGIN:
+    case USER_NOTE_FETCH:
       return {
         ...state,
         loading: true,
-        laoded: false,
+        loaded: false,
         error: null,
         notes: {},
         content: {}
@@ -61,15 +66,16 @@ export default function userReducer (state = INITIAL_STATE, action) {
       return {
         ...state,
         loading: false,
-        laoded: false,
+        loaded: false,
         notes: [],
         content: {},
         error: action.status
       }
 
     //  User has requested the content body of a note
-    case USER_NOTE_BEGIN_CONTENT:
-      obj[action.uid] = action.content
+    case USER_NOTE_REQUEST_CONTENT:
+      obj[action.uid] = {loading: true, loaded: false, error: null, text: ''}
+      console.log(">>>1 " + obj[action.uid].loaded)
       return {
         ...state,
         content: {...state.content, ...obj}
@@ -77,6 +83,7 @@ export default function userReducer (state = INITIAL_STATE, action) {
     //  the request completed successfully
     case USER_NOTE_SET_CONTENT:
       obj[action.uid] = action.content
+      console.log(">>>2 " + obj[action.uid].loaded)
       return {
         ...state,
         content: {...state.content, ...obj}
@@ -84,10 +91,19 @@ export default function userReducer (state = INITIAL_STATE, action) {
     //  the request failed successfully
     case USER_NOTE_CONTENT_ERROR:
       obj[action.uid] = action.content
+      console.log(">>>3 " + obj[action.uid].loaded)
       return {
         ...state,
         content: {...state.content, ...obj}
       }
+
+    case USER_NOTE_SAVE_SUCCESS:
+      // saving is complicated
+      // a rename needs to remove the content under the old name
+      // and re add the content under the new name
+      const new_state = {...state}
+      return new_state
+
     default:
       return state
   }

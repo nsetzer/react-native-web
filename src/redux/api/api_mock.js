@@ -1,3 +1,6 @@
+
+import axios from 'axios';
+
 const people = [
   { name: 'Nader', age: 36 },
   { name: 'Amanda', age: 24 },
@@ -17,7 +20,7 @@ export function authenticate(username, password) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       if (username === password) {
-         return resolve('TEST_JWT_TOKEN')
+         return resolve({data: {token: 'TEST_JWT_TOKEN'}})
       } else {
         reject(new Error('invalid username or password'))
       }
@@ -89,4 +92,18 @@ export function getNoteContent(uid) {
             }
         }, 500)
     })
+}
+
+export function saveNote(uid, title, content) {
+
+  return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            if (uid in content) {
+                return resolve(content[uid].text)
+            } else {
+                reject(new Error('content not found for note: ' + uid))
+            }
+        }, 500)
+    })
+
 }

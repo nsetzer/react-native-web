@@ -26,21 +26,6 @@ const bindActions = dispatch => ({
 
 const ctor = connect(mapStateToProps, bindActions);
 
-/*
-const token = localStorage.getItem('token');
-            if (token) {
-                validate_token( token )
-                    .then(result => {
-                        if (result) {
-                            this.props.loginUserSuccess(token);
-                            this.setState({
-                                loaded_if_needed: true,
-                            });
-
-                        }
-                    });
-            }
-*/
 class IAuthenticatedComponent extends React.Component {
 
     constructor(props) {
@@ -68,6 +53,9 @@ class IAuthenticatedComponent extends React.Component {
                 // or kick the user to the login screen
                 validate_token( token ).then(
                     result => {
+                        console.log("HANDLE TOKEN")
+                        console.log(result)
+
                         if (result) {
                             // TODO: setting props, state could cause a race condition
                             // will the child component render be called
@@ -82,7 +70,10 @@ class IAuthenticatedComponent extends React.Component {
                             this.setState({load: false})
                             this.props.pushLocation(this.props.redirect)
                         }
-                })
+                    }).catch(function (error) {
+                        // handle error
+                        console.log(error);
+                    })
             } else {
 
                 this.setState({load: false})

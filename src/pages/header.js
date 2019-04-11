@@ -42,8 +42,6 @@ export class HeaderPage extends React.Component {
 }
 
 const mapStateToProps = state => (
-    console.log("HEADER =---------------------"),
-    console.log(state),
 {
     location: state.route.location,
     username: state.userLogin.username,

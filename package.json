@@ -1,7 +1,8 @@
 {
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
-    "web": "react-scripts start",
+    "web": "cross-env REACT_APP_MOCK_API=true react-scripts start",
+    "dev-web": "react-scripts start",
     "build-web": "react-scripts build",
     "serve-web": "serve -s build",
     "test-web": "react-scripts test --env=jsdom",
@@ -14,6 +15,7 @@
     "eject": "expo eject"
   },
   "dependencies": {
+    "axios": "^0.18.0",
     "expo": "^32.0.0",
     "react": "16.5.0",
     "react-dom": "^16.8.6",
@@ -35,7 +37,8 @@
     "@babel/plugin-transform-runtime": "^7.4.3",
     "@babel/runtime": "^7.4.3",
     "babel-core": "^6.26.3",
-    "babel-preset-expo": "^5.0.0"
+    "babel-preset-expo": "^5.0.0",
+    "cross-env": "^5.2.0"
   },
   "private": true,
   "browserslist": [
