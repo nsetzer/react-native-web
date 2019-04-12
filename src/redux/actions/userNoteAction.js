@@ -2,7 +2,8 @@ import {
     USER_NOTE_REQUEST_CONTENT,
     USER_NOTE_FETCH,
     USER_NOTE_SAVE,
-    USER_NOTE_DELETE
+    USER_NOTE_DELETE,
+    USER_NOTE_CREATE
 } from '../constants'
 
 export function userNoteFetch() {
@@ -15,6 +16,14 @@ export function userNoteRequestContent(note_id) {
     return {
         type: USER_NOTE_REQUEST_CONTENT,
         uid: note_id,
+    }
+}
+
+export function userNoteCreate(note_id) {
+    return {
+        type: USER_NOTE_CREATE,
+        uid: note_id,
+        title: note_id,
     }
 }
 

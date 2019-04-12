@@ -6,7 +6,7 @@ import { View, Text, Button, FlatList, TouchableOpacity, StyleSheet } from "reac
 
 import { connect } from "react-redux";
 import { setAuthenticated, pushLocation, initLocation } from '../redux/actions/routeAction'
-import { userNoteFetch, userNoteRequestContent, userNoteDelete } from '../redux/actions/userNoteAction'
+import { userNoteFetch, userNoteRequestContent, userNoteDelete, userNoteCreate } from '../redux/actions/userNoteAction'
 import { Switch, Route } from '../components/Route'
 
 const styles = StyleSheet.create({
@@ -52,6 +52,13 @@ const styles = StyleSheet.create({
   },
 });
 
+function zeropad(num, size) {
+    var s = "" + num;
+    while (s.length < size) {
+        s = "0" + s
+    }
+    return s
+}
 
 class ListItem extends React.PureComponent {
 
@@ -206,6 +213,18 @@ export class Page4 extends React.Component {
 
     keyExtractor = (item, index) => item;
 
+    _onCreate = () => {
+        var counter = 0;
+        var uid = 'note' + zeropad(counter, 3) + '.txt'
+        while (this.props.notes[uid] !== undefined) {
+            counter += 1
+            uid = 'note' + zeropad(counter, 3) + '.txt'
+        }
+
+        this.props.userNoteCreate(uid)
+
+    }
+
     onPressItem = (id) => {
         // updater functions are preferred for transactional updates
         this.setState((state) => {
@@ -233,7 +252,7 @@ export class Page4 extends React.Component {
             <View style={styles.buttonContainer}>
                 <Button title='Refresh' onPress={() => {this.props.userNoteFetch()}}/>
                 <View style={{width: 20}}/>
-                <Button title='New' onPress={() => {}}
+                <Button title='New' onPress={() => {this._onCreate()}}
                 />
             </View>
 
@@ -282,7 +301,10 @@ const bindActions = dispatch => ({
     },
     userNoteFetch: () => {
         dispatch(userNoteFetch())
-    }
+    },
+    userNoteCreate: (uid) => {
+        dispatch(userNoteCreate(uid))
+    },
 
 });
 export default connect(mapStateToProps, bindActions)(Page4);

@@ -8,6 +8,8 @@ import {
   USER_NOTE_SET_CONTENT,
   USER_NOTE_CONTENT_ERROR,
 
+  USER_NOTE_CREATE,
+
   USER_NOTE_SAVE,
   USER_NOTE_SAVE_SUCCESS,
   USER_NOTE_SAVE_ERROR,
@@ -106,6 +108,18 @@ export default function userReducer (state = INITIAL_STATE, action) {
         ...state,
         content: {...state.content, ...obj}
       }
+    case USER_NOTE_CREATE:
+      new_state = {...state}
+
+      obj = {...state.content}
+      obj[action.uid] = newNote()
+      new_state.content = obj
+
+      obj = {...state.notes}
+      obj[action.uid] = {size: 0, mtime: 0, title: action.title}
+      new_state.notes = obj
+
+      return new_state
 
     case USER_NOTE_SAVE:
       obj = {...state.content}

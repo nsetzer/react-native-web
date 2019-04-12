@@ -37,6 +37,7 @@ function* _userNoteGetContent(action) {
     content = {loading: false, loaded: true, error: null, saving:false, deleting: false, text: response.data}
     yield put({type: USER_NOTE_SET_CONTENT, uid: action.uid, content})
   } catch (e) {
+    // e.g. 404
     content = {loading: false, loaded: false, error: e.message, saving:false, deleting: false, text: ''}
     yield put({type: USER_NOTE_CONTENT_ERROR, uid: action.uid, content})
   }
@@ -50,7 +51,6 @@ function* _userNoteSave(action) {
   try {
     const response = yield saveNote(action.uid, action.content)
     yield put({type: USER_NOTE_SAVE_SUCCESS, uid: action.uid, text:action.content})
-    console.log(action)
     if (action.success_redirect !== null) {
       action.success_redirect()
     }
