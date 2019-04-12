@@ -41,17 +41,17 @@ export function validate_token(token) {
 
 
 const notes = {
-      'note000': 'Grocery List',
-      'note001': 'Favorite Color List',
-      'note002': 'Favorite Animal List',
-      'note003': 'Video Games List',
-      'note004': 'TODO',
-      'note005': 'Chapter1',
-      'note006': 'TestNote1',
-      'note007': 'TestNote2',
-      'note008': 'TestNote3',
-      'note009': 'TestNote4',
-      'note010': 'TestNote5',
+      'note000': {size: 0, mtime: 0, title: 'Grocery List'},
+      'note001': {size: 0, mtime: 0, title: 'Favorite Color List'},
+      'note002': {size: 0, mtime: 0, title: 'Favorite Animal List'},
+      'note003': {size: 0, mtime: 0, title: 'Video Games List'},
+      'note004': {size: 0, mtime: 0, title: 'TODO'},
+      'note005': {size: 0, mtime: 0, title: 'Chapter1'},
+      'note006': {size: 0, mtime: 0, title: 'TestNote1'},
+      'note007': {size: 0, mtime: 0, title: 'TestNote2'},
+      'note008': {size: 0, mtime: 0, title: 'TestNote3'},
+      'note009': {size: 0, mtime: 0, title: 'TestNote4'},
+      'note010': {size: 0, mtime: 0, title: 'TestNote5'},
 }
 
 const content = {
@@ -74,7 +74,7 @@ export function getNotes() {
     // interesting results for rendering
     return new Promise((resolve, reject) => {
         setTimeout(() => {
-         return resolve(notes)
+         return resolve({data: {result: notes}})
         }, 500)
     })
 }
@@ -86,7 +86,7 @@ export function getNoteContent(uid) {
     return new Promise((resolve, reject) => {
         setTimeout(() => {
             if (uid in content) {
-                return resolve(content[uid].text)
+                return resolve({data: content[uid].text})
             } else {
                 reject(new Error('content not found for note: ' + uid))
             }
@@ -98,12 +98,27 @@ export function saveNote(uid, title, content) {
 
   return new Promise((resolve, reject) => {
         setTimeout(() => {
-            if (uid in content) {
-                return resolve(content[uid].text)
+            if (notes[uid] !== undefined) {
+                return resolve(true)
             } else {
                 reject(new Error('content not found for note: ' + uid))
             }
-        }, 500)
+        }, 750)
+    })
+
+}
+
+export function deleteNote(uid) {
+  return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            if (notes[uid] !== undefined) {
+                delete notes[uid];
+                delete content[uid];
+                return resolve(true)
+            } else {
+                reject(new Error('content not found for note: ' + uid))
+            }
+        }, 750)
     })
 
 }

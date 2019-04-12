@@ -6,7 +6,7 @@ import { View, Text, Button, StyleSheet, TextInput } from "react-native";
 
 import { connect } from "react-redux";
 import { setAuthenticated, pushLocation, initLocation } from '../redux/actions/routeAction'
-import { userNoteFetch, userNoteRequestContent } from '../redux/actions/userNoteAction'
+import { userNoteFetch, userNoteRequestContent, userNoteSave, userNoteDelete } from '../redux/actions/userNoteAction'
 
 const styles = StyleSheet.create({
   container: {
@@ -27,8 +27,13 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flex: 1,
     flexDirection: 'row',
-    justifyContent: 'flex-begin'
+    justifyContent: 'flex-begin',
+    padding: 5,
   },
+  button: {
+    margin: 5,
+    padding: 5,
+  }
 });
 
 export class Page4Edit extends React.Component {
@@ -52,7 +57,6 @@ export class Page4Edit extends React.Component {
         // load the list of notes if it has no already been loaded
         if (!this.props.loaded) {
             if (!this.props.loading && this.props.error === null) {
-                console.log("load notes")
                 this.props.userNoteFetch()
             }
         }
@@ -61,8 +65,6 @@ export class Page4Edit extends React.Component {
     }
 
     static getDerivedStateFromProps(nextProps, prevState) {
-
-        console.log("4 state from props")
 
         const uid = nextProps.route.match['uid']
         var text = ''
@@ -81,7 +83,7 @@ export class Page4Edit extends React.Component {
                 nextProps.userNoteRequestContent(uid)
             }
 
-            title = nextProps.notes[uid]
+            title = nextProps.notes[uid].title
             if (title != prevState.defaultTitle) {
                 new_state['defaultTitle'] = title
                 new_state['defaultTitleSet'] = false
@@ -98,7 +100,6 @@ export class Page4Edit extends React.Component {
     }
 
     componentWillUnmount() {
-        console.log("4 did unmount" + this.state.defaultTextSet)
         this.setState({
             defaultTextSet: false,
             defaultText: '',
@@ -116,24 +117,24 @@ export class Page4Edit extends React.Component {
     _forceUpdate() {
 
         // check to see if the default text has been set
-        console.log("4 did update" + this.state.defaultTextSet)
 
         const uid = this.props.route.match['uid']
         if (!this.state.defaultTextSet) {
             if ( this.props.content[uid] &&  this.props.content[uid].loaded) {
                 this._inputText.setNativeProps({text: this.state.defaultText})
-                this.setState({defaultTextSet: true})
+                this.setState({defaultTextSet: true,
+                    currentText:this.state.defaultText})
             }
         }
 
         if (!this.state.defaultTitleSet) {
             this._inputTitle.setNativeProps({text: this.state.defaultTitle})
-            this.setState({defaultTitleSet: true})
+            this.setState({defaultTitleSet: true,
+                    currentTitle:this.state.defaultTitle})
         }
     }
 
     render() {
-        console.log("4 did render" + this.state.defaultTextSet)
         /*
         {[styles.inputBody, {height: Math.max(35, this.state.height)}
         onContentSizeChange={(event) => {
@@ -149,6 +150,20 @@ export class Page4Edit extends React.Component {
         return (
             <View style={styles.container}>
 
+            <View style={styles.buttonContainer}>
+                <Button
+                    title='Cancel'
+                    onPress={() => {this.props.pushLocation('/u/p4')}}
+                    disabled={this.props.content[uid] && this.props.content[uid].saving}
+                />
+                <View style={{width: 20}}/>
+                <Button title='Save' onPress={() => {
+                    this.props.userNoteSave(uid, this.state.currentTitle,
+                        this.state.currentText,
+                        () => this.props.pushLocation('/u/p4'))}}
+                    disabled={this.props.content[uid] && this.props.content[uid].saving}
+                />
+            </View>
 
             <Text>Title:</Text>
 
@@ -168,6 +183,7 @@ export class Page4Edit extends React.Component {
                 />
 
             </View>
+
         )
     }
 }
@@ -201,7 +217,13 @@ const bindActions = dispatch => ({
     },
     userNoteFetch: () => {
         dispatch(userNoteFetch())
-    }
+    },
+    userNoteSave: (uid, title, content, redirect=null) => {
+        dispatch(userNoteSave(uid, title, content, redirect))
+    },
+    userNoteDelete: (uid) => {
+        dispatch(userNoteDelete(uid))
+    },
 });
 
 export default connect(mapStateToProps, bindActions)(Page4Edit);

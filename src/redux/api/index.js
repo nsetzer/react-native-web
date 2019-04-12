@@ -12,3 +12,5 @@ export const getPeople = api.getPeople
 
 export const getNotes = api.getNotes
 export const getNoteContent = api.getNoteContent
+export const saveNote = api.saveNote
+export const deleteNote = api.deleteNote

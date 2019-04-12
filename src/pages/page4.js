@@ -6,7 +6,7 @@ import { View, Text, Button, FlatList, TouchableOpacity, StyleSheet } from "reac
 
 import { connect } from "react-redux";
 import { setAuthenticated, pushLocation, initLocation } from '../redux/actions/routeAction'
-import { userNoteFetch, userNoteRequestContent } from '../redux/actions/userNoteAction'
+import { userNoteFetch, userNoteRequestContent, userNoteDelete } from '../redux/actions/userNoteAction'
 import { Switch, Route } from '../components/Route'
 
 const styles = StyleSheet.create({
@@ -39,7 +39,17 @@ const styles = StyleSheet.create({
     height: 100,
     width: '100%',
     backgroundColor: "rgba(200, 0, 0, .3)"
-  }
+  },
+  row: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  buttonContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'flex-begin',
+    padding: 5,
+  },
 });
 
 
@@ -79,6 +89,10 @@ class ListItem extends React.PureComponent {
         this.props.pushLocation(url)
     }
 
+    _onDelete = () => {
+        this.props.userNoteDelete(this.props.id)
+    }
+
     _getText() {
 
         if (this.props.error != null) {
@@ -103,7 +117,18 @@ class ListItem extends React.PureComponent {
                 <TouchableOpacity onPress={this._onToggle}>
                     <View style={styles.titleContainer}>
                         <Text style={{color: textColor}}>{this.props.title}</Text>
+                        <View>
+                        <View style={styles.row}>
+                        {this.state.hideSummary?
+                            null:
+                            <Button title="delete" onPress={this._onDelete}
+                                disabled={this.props.content[this.props.id] && this.props.content[this.props.id].deleting}
+                            />
+                        }
+                        <View style={{width: 10}} />
                         <Button title="edit" onPress={this._onEdit} />
+                        </View>
+                        </View>
                     </View>
                 </TouchableOpacity>
                 <View style={styles.summaryContainer}>
@@ -126,6 +151,9 @@ const itemBindActions = dispatch => ({
     },
     userNoteRequestContent: (uid) => {
         dispatch(userNoteRequestContent(uid))
+    },
+    userNoteDelete: (uid) => {
+        dispatch(userNoteDelete(uid))
     }
 });
 
@@ -166,7 +194,7 @@ export class Page4 extends React.Component {
         // sort the lists by their name
         const note_list = Object.keys(
             nextProps.notes).sort((a, b) =>
-                nextProps.notes[a].localeCompare(nextProps.notes[b]))
+                nextProps.notes[a].title.localeCompare(nextProps.notes[b].title))
         // conditionally update the state
         if (note_list != prevState.note_list) {
             return {note_list: note_list}
@@ -192,7 +220,7 @@ export class Page4 extends React.Component {
     renderItem = ({item}) => (
         <ListItemC
             id={item}
-            title={this.props.notes[item]}
+            title={this.props.notes[item].title}
             onPressItem={this.onPressItem}
             selected={!!this.state.selected[item]}
         ></ListItemC>
@@ -201,6 +229,13 @@ export class Page4 extends React.Component {
     render() {
         return (
             <View>
+
+            <View style={styles.buttonContainer}>
+                <Button title='Refresh' onPress={() => {this.props.userNoteFetch()}}/>
+                <View style={{width: 20}}/>
+                <Button title='New' onPress={() => {}}
+                />
+            </View>
 
 
             {(this.props.error !== null)
@@ -248,6 +283,7 @@ const bindActions = dispatch => ({
     userNoteFetch: () => {
         dispatch(userNoteFetch())
     }
+
 });
 export default connect(mapStateToProps, bindActions)(Page4);
 
