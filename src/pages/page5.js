@@ -1,12 +1,15 @@
 
 
 import React from "react";
-import { View, Text, Button, FlatList, TouchableOpacity, StyleSheet, Image } from "react-native";
+import { View, Text, Button, FlatList, TouchableOpacity, StyleSheet, Image, NativeModules } from "react-native";
 
 import { connect } from "react-redux";
 import { setAuthenticated, pushLocation, initLocation } from '../redux/actions/routeAction'
-import { env, fsGetPath } from '../redux/api'
+import { env, fsGetPath, downloadFile, uploadFile } from '../redux/api'
 import { Switch, Route } from '../components/Route'
+
+        //console.log(NativeModules)
+        //console.log(NativeModules.ReactNativeDownloadManager)
 
 const styles = StyleSheet.create({
     listItemContainer: {
@@ -28,6 +31,12 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center'
     },
+    buttonContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'flex-start',
+        padding: 15,
+    },
     footer: {
         height: 100,
         width: '100%',
@@ -38,7 +47,7 @@ const styles = StyleSheet.create({
 function hasPreview(name) {
     var lst = name.split('.')
     var ext = lst[lst.length-1].toLowerCase()
-    const exts = {jpg: true, png: true}
+    const exts = {jpg: true, png: true, bmp: false, gif: false}
     return exts[ext]
 }
 
@@ -50,6 +59,8 @@ class ListItem extends React.PureComponent {
         //       an additional property for the source
         //       this is not working and the fallback token as parameter
         //       is being used instead until this can be fixed
+
+
         var url = (env.baseUrl + '/api/fs/' +
             this.props.root + '/path/')
         if (this.props.path !== '') {
@@ -64,10 +75,10 @@ class ListItem extends React.PureComponent {
                         style={{width: 80, height: 60}}
                         source={{uri: url, headers: {Authorization: this.props.token}}}
                     />:
-                    <View style={{border: '2px solid red', width: 80, height: 60}}/>}
+                    <View style={{borderColor: 'red', borderWidth: 2, width: 80, height: 60}}/>}
 
                     <TouchableOpacity onPress={() => {this.props.onPress(this.props.data)}}>
-                        <Text>{this.props.data.name}</Text>
+                        <Text style={{padding: 5}}>{this.props.data.name}</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -109,8 +120,6 @@ export class Page5 extends React.Component {
             loaded: false,
             loading: root !== undefined,
         }
-        console.log("page 5 constructor")
-        console.log(this.props)
         if (root !== undefined) {
            fsGetPath(this.state.root, this.state.path)
                .then(this.onListDirSuccess.bind(this))
@@ -142,8 +151,6 @@ export class Page5 extends React.Component {
         }
         // conditionally update the state
         if (Object.keys(new_state).length > 0) {
-            console.log("updating state")
-            console.log(new_state)
             return new_state
         }
 
@@ -153,15 +160,12 @@ export class Page5 extends React.Component {
 
 
     componentDidMount() {
-        console.log("page5 did mount")
     }
 
     maybefetchContent() {
-        console.log("maybe fetch content")
        if (!this.state.loading && !this.state.loaded) {
-           console.log('loading content')
            if (this.state.root !== undefined) {
-               this.setState({'loading': true})
+               this.setState({'loading': true, loaded: false, directoryItems: [], })
                fsGetPath(this.state.root, this.state.path)
                    .then(this.onListDirSuccess.bind(this))
                    .catch(this.onListDirError.bind(this));
@@ -176,9 +180,7 @@ export class Page5 extends React.Component {
     onListDirSuccess(response) {
         // validate that the current state matches the expected state
         // when the function was fired
-        console.log("list dir success")
         const obj = response.data.result
-        console.log(obj)
 
         // obj.name == current root
         // obj.parent == string representing parent path
@@ -196,13 +198,12 @@ export class Page5 extends React.Component {
             items.push({...files[i], isDir: false})
         }
 
-        this.setState({directoryItems: items, parentPath: obj.parent})
+        this.setState({directoryItems: items, parentPath: obj.parent,
+            loading: false, loaded: true})
     }
 
     onListDirError(error) {
-        console.log("list dir error")
-        console.log(error)
-        this.setState({directoryItems: [], parentPath: ''})
+        this.setState({directoryItems: [], parentPath: '', loading: false, loaded: true})
 
     }
 
@@ -233,12 +234,94 @@ export class Page5 extends React.Component {
     itemOnPress = (data) => {
 
         if (data.isDir) {
-            this.props.pushLocation(this.props.location + '/' + data.name)
+            var url = this.props.location
+
+            if (this.props.location.endsWith('/')) {
+                url += data.name
+            } else {
+                url += '/' + data.name
+            }
+            this.props.pushLocation(url)
+        } else {
+
+            var url = (env.baseUrl + '/api/fs/' +
+                this.state.root + '/path/')
+            if (this.state.path !== '') {
+                url += this.state.path + '/'
+            }
+            url += data.name
+            // + '&token=' + this.props.token + "&dl=1"
+            const token = localStorage.getItem("user_token")
+
+            downloadFile(url, {'Authorization': token},
+                (result) => {console.log(result);},
+                (result) => {console.log(result);})
         }
     };
 
+    goBack() {
+        if (this.state.parentPath === "") {
+            this.props.pushLocation('/u/p5')
+
+        } else {
+            const url = '/u/p5/' + this.state.root + "/" + this.state.parentPath
+            this.props.pushLocation(url)
+
+        }
+    }
+
+    onUploadClicked() {
+
+        var url = (env.baseUrl + '/api/fs/' +
+            this.state.root + '/path/')
+        if (this.state.path !== '') {
+            url += this.state.path + '/'
+        }
+        const token = localStorage.getItem("user_token")
+
+        uploadFile(url, {'Authorization': token},
+            (result) => {this.onUploadSuccess(result)},
+            (result) => {console.log('upload fail'); console.log(result);});
+    }
+
+    onUploadSuccess(result) {
+
+        // construct a temporary object to represent the
+        // uploaded file in the display list.
+        // insert this object at position 0 if it does not exist
+
+        const obj = {
+          encryption:"system",
+          // TODO: better support for parameters in upload
+          // this lastModified value is that of the original file
+          // however, the upload does not pass this to the server
+          // meaning a hard page refresh will show a different date
+          mtime: result.lastModified,
+          name: result.name,
+          permission:0,
+          public:null,
+          size: result.size,
+          version:1
+        }
+        console.log(result)
+        console.log(obj)
+
+        const items = this.state.directoryItems
+        var found = false
+        for (var i in items) {
+            if (items[i].name == obj.name) {
+                items[i] = obj
+                found = true
+                break
+            }
+        }
+        if (!found) {
+            items.unshift(obj)
+        }
+        this.setState({directoryItems: items})
+    }
+
     render() {
-        console.log("page 5 render")
 
         const root = this.props.route.match.root
         const path = this.props.route.match.path
@@ -247,9 +330,6 @@ export class Page5 extends React.Component {
             return (
                 <View>
 
-                <Text>select bucket</Text>
-                <Text>root: {this.state.root} {root === undefined?'true':'false'}</Text>
-                <Text>path: {this.state.path} {path === undefined?'true':'false'}</Text>
                 <FlatList
                     data={this.state.rootNames}
                     extraData={this.state}
@@ -264,16 +344,26 @@ export class Page5 extends React.Component {
             return (
                 <View>
 
-                <Text>root: {root} {root === undefined?'true':'false'}</Text>
-                <Text>path: {path} {path === undefined?'true':'false'}</Text>
+                <View style={styles.buttonContainer}>
+                    <TouchableOpacity onPress={() => {this.goBack()}}>
+                        <Text style={{padding: 5}}>Back</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => {this.onUploadClicked()}}>
+                        <Text style={{padding: 5}}>Upload</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity>
+                        <Text style={{padding: 5}}>New Directory</Text>
+                    </TouchableOpacity>
+                </View>
 
-                <FlatList
-                    data={this.state.directoryItems}
-                    extraData={this.state}
-                    keyExtractor={this.itemKeyExtractor}
-                    renderItem={this.itemRenderItem.bind(this)}
-                    ListFooterComponent={ListFooter}
-                    />
+                {this.state.loading?<Text>loading...</Text>:
+                    <FlatList
+                        data={this.state.directoryItems}
+                        extraData={this.state}
+                        keyExtractor={this.itemKeyExtractor}
+                        renderItem={this.itemRenderItem.bind(this)}
+                        ListFooterComponent={ListFooter}
+                        />}
 
                 </View>
             );
@@ -292,4 +382,5 @@ const bindActions = dispatch => ({
         dispatch(pushLocation(location))
     },
 });
+
 export default connect(mapStateToProps, bindActions)(Page5);
