@@ -263,19 +263,16 @@ class IRoute extends React.Component {
         // do not render the Component Children if authentication
         // is required and the router has not been authenticated
         const msg = (this.props.name || 'undefined') + " | " + this.props.path  + " | " + this.props.location
-        console.log("route begin render child at " + msg)
 
         const v1 = this.props.auth || false
         const v2 = !this.props.authenticated
         if (v1 && v2) {
-            console.log("route (a) will not render child at " + msg)
             return null
         }
 
         const match = patternMatch(this.props.path, this.props.location)
 
         if (match === null) {
-            console.log("route (b) will not render child at " + msg)
             return null;
         }
 
@@ -288,8 +285,6 @@ class IRoute extends React.Component {
         );
 
         // React.createElement(this.props.component, {route: route})
-        console.log("route will render child at " + msg)
-        console.log(childrenWithProps)
         return (childrenWithProps);
     }
 }
@@ -321,7 +316,6 @@ class ISwitch extends React.Component {
                 const v1 = child.props.auth || false
                 const v2 = !this.props.authenticated
                 if (v1 && v2) {
-                    console.log("c " + child.props.path + ' / ' + this.props.location + ' / ' + this.props.initialized)
                     continue;
                 }
 
@@ -331,10 +325,8 @@ class ISwitch extends React.Component {
                 // from recomputing the match
                 var match = patternMatch(child.props.path, this.props.location);
                 if (match !== null) {
-                    console.log("+ " + child.props.path + ' / ' + this.props.location + ' / ' + this.props.initialized)
                     return child
                 }
-                console.log("- " + child.props.path + ' / ' + this.props.location + ' / ' + this.props.initialized)
             }
         }
 

@@ -14,3 +14,7 @@ export const getNotes = api.getNotes
 export const getNoteContent = api.getNoteContent
 export const saveNote = api.saveNote
 export const deleteNote = api.deleteNote
+
+export const fsGetPath = api.fsGetPath
+
+export const env = api.env

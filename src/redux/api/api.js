@@ -2,7 +2,7 @@
 
 import axios from 'axios';
 
-const env = {baseUrl: ''}
+export const env = {baseUrl: ''}
 
 if (process.env.NODE_ENV === "development" ||
     process.env.NODE_ENV === "dev" ||
@@ -61,4 +61,10 @@ export function deleteNote(uid) {
     const config = authConfig();
     config['headers']["Content-Type"] = "text/plain"
     return axios.delete(url, config);
+}
+
+export function fsGetPath(root, path) {
+    const url = env.baseUrl + '/api/fs/' + root +'/path/' + path
+    const config = authConfig();
+    return axios.get(url, config);
 }

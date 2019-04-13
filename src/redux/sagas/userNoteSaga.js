@@ -1,11 +1,10 @@
-import { Platform } from 'react-native';
 import {
     USER_NOTE_FETCH,
-    USER_NOTE_FETCH_BEGIN,
+    //USER_NOTE_FETCH_BEGIN,
     USER_NOTE_FETCH_SUCCESS,
     USER_NOTE_FETCH_ERROR,
     USER_NOTE_REQUEST_CONTENT,
-    USER_NOTE_BEGIN_CONTENT,
+    //USER_NOTE_BEGIN_CONTENT,
     USER_NOTE_SET_CONTENT,
     USER_NOTE_CONTENT_ERROR,
     USER_NOTE_SAVE,
@@ -56,7 +55,7 @@ function* _userNoteSave(action) {
     }
   } catch (e) {
     content = {error: e.message, saving:false}
-    yield put({type: USER_NOTE_SAVE_ERROR, uid: action.uid})
+    yield put({type: USER_NOTE_SAVE_ERROR, uid: action.uid, content})
   }
 }
 

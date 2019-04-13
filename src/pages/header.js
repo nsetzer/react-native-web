@@ -35,6 +35,7 @@ export class HeaderPage extends React.Component {
                     <Button title='Route2' onPress={()=>{this.props.pushLocation('/u/p2')}} />
                     <Button title='Route3' onPress={()=>{this.props.pushLocation('/u/p3')}} />
                     <Button title='Route4' onPress={()=>{this.props.pushLocation('/u/p4')}} />
+                    <Button title='Route5' onPress={()=>{this.props.pushLocation('/u/p5/')}} />
                 </View>
                 </View>
         )

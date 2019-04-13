@@ -1,6 +1,8 @@
 
 import axios from 'axios';
 
+export const env = {baseUrl: ''}
+
 const people = [
   { name: 'Nader', age: 36 },
   { name: 'Amanda', age: 24 },
@@ -122,3 +124,94 @@ export function deleteNote(uid) {
     })
 
 }
+
+const root_dir = {"result":{
+  "directories": ["public", "private", "secure"],
+  "files": [
+    {
+      "encryption":"system",
+      "mtime":1552437649,
+      "name":"sample1.png",
+      "permission":0,
+      "public":null,
+      "size":444112,
+      "version":1
+    },
+    {
+      "encryption":"system",
+      "mtime":1552437838,
+      "name":"sample2.png",
+      "permission":0,
+      "public":null,
+      "size":159599,
+      "version":1
+    },
+    {
+      "encryption":"system",
+      "mtime":1552437838,
+      "name":"sample3.png",
+      "permission":0,
+      "public":null,
+      "size":159599,
+      "version":1
+    }
+  ],
+  "name":"default",
+  "parent":"",
+  "path":""
+}}
+
+const child_dir = {"result":{
+  "directories": [],
+  "files": [
+    {
+      "encryption":"system",
+      "mtime":1552437649,
+      "name":"sample4.png",
+      "permission":0,
+      "public":null,
+      "size":444112,
+      "version":1
+    },
+    {
+      "encryption":"system",
+      "mtime":1552437838,
+      "name":"sample5.png",
+      "permission":0,
+      "public":null,
+      "size":159599,
+      "version":1
+    },
+    {
+      "encryption":"system",
+      "mtime":1552437838,
+      "name":"sample6.png",
+      "permission":0,
+      "public":null,
+      "size":159599,
+      "version":1
+    }
+  ],
+  "name":"default",
+  "parent":"",
+  "path":""
+}}
+
+const url_map = {
+  'sample1.png': 'https://picsum.photos/300/300',
+  'sample2.png': 'https://picsum.photos/300/200',
+  'sample3.png': 'https://picsum.photos/200/300',
+  'sample4.png': 'https://picsum.photos/64/64',
+  'sample5.png': 'https://picsum.photos/128/64',
+  'sample6.png': 'https://picsum.photos/64/128',
+}
+
+export function fsGetPath(root, path) {
+    console.log(root + ' : ' + path)
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve({data: root_dir})
+        },
+        750)})
+}
+

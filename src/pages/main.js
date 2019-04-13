@@ -12,6 +12,7 @@ import Page2 from './page2'
 import Page3 from './page3'
 import Page4 from './page4'
 import Page4Edit from './page4edit'
+import Page5 from './page5'
 
 const styles = StyleSheet.create({
   container: {
@@ -60,6 +61,9 @@ export class MainPage extends React.Component {
                     <Route name='main-switch' path='/u/p3'><Page3/></Route>
                     <Route name='main-switch' path='/u/p4'><Page4/></Route>
                     <Route name='main-switch' path='/u/p4/:uid'><Page4Edit/></Route>
+                    <Route name='main-switch' path='/u/p5'><Page5/></Route>
+                    <Route name='main-switch' path='/u/p5/:root'><Page5/></Route>
+                    <Route name='main-switch' path='/u/p5/:root/:path*'><Page5/></Route>
                 </Switch>
             </ScrollView>
         )
