@@ -6,6 +6,7 @@
     "build-web": "react-scripts build",
     "serve-web": "serve -s build",
     "test-web": "react-scripts test --env=jsdom",
+    "eject-web": "react-scripts eject",
     "android": "expo start --android",
     "prod-android": "expo start --no-dev --no-minify --android",
     "build-android": "expo build:android",
