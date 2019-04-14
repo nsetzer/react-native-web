@@ -44,9 +44,9 @@ class ErrorBoundary extends React.Component {
 const styles2 = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFCCCC',
+        // backgroundColor: '#FFCCCC',
         height: '100%',
-        width: '100%'
+        width: '100%',
     },
 });
 

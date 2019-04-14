@@ -1,7 +1,7 @@
 
 
 import React from "react";
-import { View, Text, Button, FlatList, TouchableOpacity, StyleSheet, Image, NativeModules } from "react-native";
+import { Animated, View, Text, TextInput, Button, FlatList, TouchableOpacity, StyleSheet, Image, NativeModules, TouchableHighlight } from "react-native";
 
 import { connect } from "react-redux";
 import { setAuthenticated, pushLocation, initLocation } from '../redux/actions/routeAction'
@@ -44,11 +44,54 @@ const styles = StyleSheet.create({
     },
 });
 
+const encryptionColorMap = {
+    system: "#9b111e",
+    server: "#0f52ba",
+    client: "#FFD700",
+}
+
 function hasPreview(name) {
     var lst = name.split('.')
     var ext = lst[lst.length-1].toLowerCase()
     const exts = {jpg: true, png: true, bmp: false, gif: false}
     return exts[ext]
+}
+
+class FadeInView extends React.Component {
+  state = {
+    fadeAnim: new Animated.Value(0),  // Initial value for opacity: 0
+    visible: false
+  }
+
+  static getDerivedStateFromProps(nextProps, prevState) {
+    if (nextProps.visible) {
+        Animated.timing(
+          prevState.fadeAnim,
+          {
+            toValue: nextProps.visible?1:0,
+            duration: 1000,
+          }
+        ).start();
+      }
+    return {visible: nextProps.visible}
+  }
+
+  render() {
+    let { fadeAnim } = this.state;
+
+    console.log(fadeAnim)
+
+    return (
+      <Animated.View                 // Special animatable View
+        style={{
+          ...this.props.style,
+          opacity: fadeAnim,         // Bind opacity to animated value
+        }}
+      >
+        {this.props.visible? this.props.children : null}
+      </Animated.View>
+    );
+  }
 }
 
 class ListItem extends React.PureComponent {
@@ -72,10 +115,17 @@ class ListItem extends React.PureComponent {
                 <View style={styles.listItemRow}>
                 {!this.props.data.isDir && hasPreview(this.props.data.name)?
                     <Image
-                        style={{width: 80, height: 60}}
+
+                        style={{
+                            borderColor: (encryptionColorMap[this.props.data.encryption] || '#000000'),
+                            borderWidth: 3,width: 80, height: 60}}
                         source={{uri: url, headers: {Authorization: this.props.token}}}
                     />:
-                    <View style={{borderColor: 'red', borderWidth: 2, width: 80, height: 60}}/>}
+                    <View style={{
+                        borderColor: (encryptionColorMap[this.props.data.encryption] || '#000000'),
+                        borderWidth: 3,
+                        backgroundColor: (this.props.data.isDir ? 'black': 'white'),
+                        width: 80, height: 60}}/>}
 
                     <TouchableOpacity onPress={() => {this.props.onPress(this.props.data)}}>
                         <Text style={{padding: 5}}>{this.props.data.name}</Text>
@@ -119,6 +169,8 @@ export class Page5 extends React.Component {
             parentPath: null,
             loaded: false,
             loading: root !== undefined,
+            modalVisible: false,
+            newFolderName: ""
         }
         if (root !== undefined) {
            fsGetPath(this.state.root, this.state.path)
@@ -260,7 +312,7 @@ export class Page5 extends React.Component {
     };
 
     goBack() {
-        if (this.state.parentPath === "") {
+        if (this.state.parentPath === this.state.path) {
             this.props.pushLocation('/u/p5')
 
         } else {
@@ -279,7 +331,7 @@ export class Page5 extends React.Component {
         }
         const token = localStorage.getItem("user_token")
 
-        uploadFile(url, {'Authorization': token},
+        uploadFile(url, {'Authorization': token}, {'crypt': 'system'},
             (result) => {this.onUploadSuccess(result)},
             (result) => {console.log('upload fail'); console.log(result);});
     }
@@ -291,7 +343,7 @@ export class Page5 extends React.Component {
         // insert this object at position 0 if it does not exist
 
         const obj = {
-          encryption:"system",
+          encryption: "system",
           // TODO: better support for parameters in upload
           // this lastModified value is that of the original file
           // however, the upload does not pass this to the server
@@ -321,6 +373,18 @@ export class Page5 extends React.Component {
         this.setState({directoryItems: items})
     }
 
+    onCreateFolder(name) {
+        var url = this.props.location
+
+        if (this.props.location.endsWith('/')) {
+            url += name
+        } else {
+            url += '/' + name
+        }
+        this.props.pushLocation(url)
+    }
+
+
     render() {
 
         const root = this.props.route.match.root
@@ -343,7 +407,6 @@ export class Page5 extends React.Component {
         } else {
             return (
                 <View>
-
                 <View style={styles.buttonContainer}>
                     <TouchableOpacity onPress={() => {this.goBack()}}>
                         <Text style={{padding: 5}}>Back</Text>
@@ -351,10 +414,40 @@ export class Page5 extends React.Component {
                     <TouchableOpacity onPress={() => {this.onUploadClicked()}}>
                         <Text style={{padding: 5}}>Upload</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={() => {
+                        this.setState({modalVisible: !this.state.modalVisible});
+                        }}>
                         <Text style={{padding: 5}}>New Directory</Text>
                     </TouchableOpacity>
                 </View>
+
+                <FadeInView
+                  visible={this.state.modalVisible}>
+                  <View>
+                    <View style={[styles.listItemRow, {justifyContent: 'space-between'}]}>
+                      <TextInput
+                        style={{padding: 5, margin: 5, borderWidth: 1, borderColor: 'black', flexGrow: 2}}
+                        onChangeText={(text) => {this.setState({newFolderName: text})}} />
+
+                      <View style={[styles.listItemRow, {justifyContent: 'space-between'}]}>
+                      <TouchableOpacity
+                        onPress={() => {
+                          this.onCreateFolder(this.state.newFolderName)
+                          this.setState({modalVisible: !this.state.modalVisible});
+                        }}>
+                        <Text style={{padding: 5, margin: 5}}>Create</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => {
+                          this.setState({modalVisible: !this.state.modalVisible});
+                        }}>
+                        <Text style={{padding: 5, margin: 5}}>Cancel</Text>
+                      </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                </FadeInView>
+
 
                 {this.state.loading?<Text>loading...</Text>:
                     <FlatList

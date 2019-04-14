@@ -250,12 +250,13 @@ export class Page4 extends React.Component {
             <View>
 
             <View style={styles.buttonContainer}>
-                <Button title='Refresh' onPress={() => {this.props.userNoteFetch()}}/>
-                <View style={{width: 20}}/>
-                <Button title='New' onPress={() => {this._onCreate()}}
-                />
+                <TouchableOpacity onPress={() => {this.props.userNoteFetch()}}>
+                    <Text style={{padding: 5}}>Refresh</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => {this._onCreate()}}>
+                    <Text style={{padding: 5}}>New</Text>
+                </TouchableOpacity>
             </View>
-
 
             {(this.props.error !== null)
               ?<Text>{this.props.error}</Text>
