@@ -7,7 +7,7 @@ export const env = {baseUrl: ''}
 if (process.env.NODE_ENV === "development" ||
     process.env.NODE_ENV === "dev" ||
     process.env.NODE_ENV === "test") {
-    env.baseUrl = "http://localhost:4200"
+    env.baseUrl = "http://" + window.location.hostname + ":4200"
 } else {
     env.baseUrl = ""
 }

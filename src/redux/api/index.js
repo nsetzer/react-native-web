@@ -85,7 +85,7 @@ export function downloadFile(url, headers={}, params, success=null, failure=null
 }
 
 
-function _uploadFileImpl(elem, urlbase, headers={}, params={}, success=null, failure=null) {
+function _uploadFileImpl(elem, urlbase, headers={}, params={}, success=null, failure=null, progress=null) {
 
     var queryString = Object.keys(params).map(key => key + '=' + params[key]).join('&');
 
@@ -119,6 +119,19 @@ function _uploadFileImpl(elem, urlbase, headers={}, params={}, success=null, fai
         // url += '&modified=' + file.lastModified;
         // xhr.setRequestHeader('X-LAST-MODIFIED', file.lastModified);
 
+        xhr.upload.onprogress = function(event) {
+            if (event.lengthComputable) {
+                if (progress !== null) {
+                    progress({
+                        bytesTransfered: event.loaded,
+                        fileSize: file.size,
+                        fileName: file.name,
+                        finished: false,
+                    })
+                }
+            }
+        }
+
         xhr.onreadystatechange = function() {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 if (success !== null) {
@@ -126,16 +139,39 @@ function _uploadFileImpl(elem, urlbase, headers={}, params={}, success=null, fai
                         lastModified: file.lastModified,
                         size: file.size, type: file.type};
                     success(params)
+                    if (progress !== null) {
+                        progress({
+                            fileSize: file.size,
+                            fileName: file.name,
+                            finished: true,
+                        })
+                    }
                 }
             } else if(xhr.status >= 400) {
                 if (failure !== null) {
                     var params={name: file.name, url, status: xhr.status};
                     failure(params)
+                    if (progress !== null) {
+                        progress({
+                            fileSize: file.size,
+                            fileName: file.name,
+                            finished: true,
+                        })
+                    }
                 }
             } else {
                 console.log("xhr status changed: " + xhr.status)
             }
         };
+
+        if (progress !== null) {
+            progress({
+                bytesTransfered: 0,
+                fileSize: file.size,
+                fileName: file.name,
+                finished: false,
+            })
+        }
 
         var fd = new FormData();
         fd.append('upload', file);
@@ -148,7 +184,7 @@ function _uploadFileImpl(elem, urlbase, headers={}, params={}, success=null, fai
 // event to click on this form, opening the upload file dialog
 // when the user selects a file dispatch an multi-part form upload
 
-export function uploadFile(urlbase, headers={}, params={}, success=null, failure=null) {
+export function uploadFile(urlbase, headers={}, params={}, success=null, failure=null, progress=null) {
 
     // TODO: Investigate destructor for createElement
     // upload is a rare event but could this be causing
@@ -157,7 +193,8 @@ export function uploadFile(urlbase, headers={}, params={}, success=null, failure
     var element = document.createElement('input');
     element.type = 'file'
     element.hidden = true
-    element.onchange = (event) => {_uploadFileImpl(element, urlbase, headers, params, success, failure)}
+    element.onchange = (event) => {_uploadFileImpl(
+        element, urlbase, headers, params, success, failure, progress)}
     element.dispatchEvent(new MouseEvent('click'));
 }
 

@@ -70,9 +70,11 @@ class IAuthenticatedComponent extends React.Component {
                             this.setState({load: false})
                             this.props.pushLocation(this.props.redirect)
                         }
-                    }).catch(function (error) {
+                    }).catch( (error) => {
                         // handle error
+                        console.log('caught error trying to auth. is the server runnig?');
                         console.log(error);
+                        this.props.pushLocation(this.props.redirect)
                     })
             } else {
 
