@@ -22,9 +22,6 @@ const styles = StyleSheet.create({
 
 export class HeaderPage extends React.Component {
     render() {
-        const pathname = this.props.location;
-        const username = this.props.username;
-        const token = this.props.token;
         return (
                 <View style={styles.container}>
                 <Text>Welcome to React Native Web️ </Text>

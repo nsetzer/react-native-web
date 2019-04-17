@@ -7,7 +7,6 @@ import {
   KeyboardAvoidingView,
   Image,
   Button,
-  TouchableOpacity,
   StyleSheet,
   StatusBar
 } from 'react-native';

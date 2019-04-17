@@ -13,14 +13,14 @@ function* userLogin (action) {
 
     console.log("get token")
     console.log(token.data.token)
-    if (Platform.OS == 'web') {
+    if (Platform.OS === 'web') {
         localStorage.setItem('user_token', token.data.token)
         localStorage.setItem('user_name', username)
     }
 
     yield put({type: USER_AUTH_SUCCESS, username, token: token.data.token})
   } catch (e) {
-    if (Platform.OS == 'web') {
+    if (Platform.OS === 'web') {
         localStorage.setItem('user_token', null)
         localStorage.setItem('user_name', null)
     }

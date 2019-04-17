@@ -11,8 +11,11 @@ import { Switch, Route } from '../components/Route'
         //console.log(NativeModules)
         //console.log(NativeModules.ReactNativeDownloadManager)
 
+import HyperLink from '../components/HyperLink'
+
 import SvgFolder from '../assets/icon/folder.svg'
 import SvgFile from '../assets/icon/file.svg'
+
 
 export const Svg = 'img';
 
@@ -142,7 +145,7 @@ class ListItem extends React.PureComponent {
         if (this.props.path !== '') {
             url += this.props.path + '/'
         }
-        url += this.props.data.name + '?preview=thumb&token=' + this.props.token + "&dl=0"
+        url += this.props.data.name + '?token=' + this.props.token
         return (
             <View style={styles.listItemContainer}>
                 <View style={styles.listItemRow}>
@@ -153,7 +156,7 @@ class ListItem extends React.PureComponent {
                         style={{
                             borderColor: (encryptionColorMap[this.props.data.encryption] || '#000000'),
                             borderWidth: 3,width: 80, height: 60}}
-                        source={{uri: url, headers: {Authorization: this.props.token}}}
+                        source={{uri: url + "&preview=thumb&dl=0", headers: {Authorization: this.props.token}}}
                     />:
                     <View style={{
                             borderColor: (encryptionColorMap[this.props.data.encryption] || '#000000'),
@@ -168,9 +171,13 @@ class ListItem extends React.PureComponent {
                 }
 
                     <TouchableOpacity onPress={() => {this.props.onPress(this.props.data)}}>
-                        <Text style={{padding: 5}}>{this.props.data.name}</Text>
+                        <Text
+                            numberOfLines={1}
+                            ellipsizeMode={'tail'}
+                            style={{padding: 5, width: '100%'}}>{this.props.data.name}</Text>
                     </TouchableOpacity>
                 </View>
+
             </View>
         );
     }
@@ -479,10 +486,17 @@ export class Page5 extends React.Component {
                 </View>
             );
         } else {
+            // {this.state.showDialog?<ModalDialog dismiss={() => this.hideDialog()}/>:null}
+            //          <TouchableOpacity
+            //              style={{marginRight: 5}}
+            //              onPress={() => {
+            //                  this.showDialog()
+            //              }}>
+            //              <Text style={{padding: 5}}>Show Dialog</Text>
+            //          </TouchableOpacity>
             return (
 
                 <View>
-                {this.state.showDialog?<ModalDialog dismiss={() => this.hideDialog()}/>:null}
 
                 <ScrollView stickyHeaderIndices={[0]} contentContainerStyle={{ flex: 1 }} style={{zIndex: 10}}>
 
@@ -505,13 +519,7 @@ export class Page5 extends React.Component {
                             }}>
                             <Text style={{padding: 5}}>New Directory</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity
-                            style={{marginRight: 5}}
-                            onPress={() => {
-                                this.showDialog()
-                            }}>
-                            <Text style={{padding: 5}}>Show Dialog</Text>
-                        </TouchableOpacity>
+
                     </View>
 
                     <FadeInView
