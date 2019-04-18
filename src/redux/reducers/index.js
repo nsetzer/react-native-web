@@ -9,6 +9,7 @@ import appData from './dataReducer'
 import route from './routeReducer'
 import userLogin from './userLoginReducer'
 import userNote from './userNoteReducer'
+import audio from './audioReducer'
 
 // the name here is used as the top level key
 // in the state dictionary. the value of that key will
@@ -20,7 +21,8 @@ const reducers = {
     appData,
     route,
     userLogin,
-    userNote
+    userNote,
+    audio
 };
 
 export default combineReducers(reducers)

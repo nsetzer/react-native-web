@@ -207,7 +207,6 @@ const url_map = {
 }
 
 export function fsGetPath(root, path) {
-    console.log(root + ' : ' + path)
     return new Promise((resolve, reject) => {
         setTimeout(() => {
             resolve({data: root_dir})
@@ -215,3 +214,35 @@ export function fsGetPath(root, path) {
         750)})
 }
 
+
+export function libraryGetSong(song_id) {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve({})
+        },
+        200)})
+}
+
+export function libraryDomainInfo() {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve({})
+        },
+        200)})
+}
+
+export function queueGetSongs() {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve({})
+        },
+        200)})
+}
+
+export function queuePopulate() {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve({})
+        },
+        200)})
+}

@@ -68,3 +68,28 @@ export function fsGetPath(root, path) {
     const config = authConfig();
     return axios.get(url, config);
 }
+
+
+export function libraryGetSong(song_id) {
+    const url = env.baseUrl + '/api/library/' + song_id
+    const config = authConfig();
+    return axios.get(url, config);
+}
+
+export function libraryDomainInfo() {
+    const url = env.baseUrl + '/api/library/info'
+    const config = authConfig();
+    return axios.get(url, config);
+}
+
+export function queueGetSongs() {
+    const url = env.baseUrl + '/api/queue'
+    const config = authConfig();
+    return axios.get(url, config);
+}
+
+export function queuePopulate() {
+    const url = env.baseUrl + '/api/queue/populate'
+    const config = authConfig();
+    return axios.get(url, config);
+}

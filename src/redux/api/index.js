@@ -6,6 +6,8 @@ console.log(process.env)
 
 const api = mock_api?require('./api_mock'):require('./api');
 
+export const env = api.env
+
 export const authenticate = api.authenticate
 export const validate_token = api.validate_token
 export const getPeople = api.getPeople
@@ -17,7 +19,12 @@ export const deleteNote = api.deleteNote
 
 export const fsGetPath = api.fsGetPath
 
-export const env = api.env
+export const libraryGetSong = api.libraryGetSong
+export const libraryDomainInfo = api.libraryDomainInfo
+export const queueGetSongs = api.queueGetSongs
+export const queuePopulate = api.queuePopulate
+
+// ---------------------------------------
 
 function saveBlob(blob, fileName) {
     var a = document.createElement('a');

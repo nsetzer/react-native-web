@@ -7,6 +7,7 @@ import { all } from 'redux-saga/effects';
 
 import dataSaga from './dataSaga'
 import userLoginSaga from './userLoginSaga'
+
 import {
     userNoteFetch,
     userNoteGetContent,
@@ -14,7 +15,13 @@ import {
     userNoteDelete
 } from './userNoteSaga'
 
- function* rootSaga () {
+import {
+    audioGetDomain,
+    audioGetQueue,
+    audioPopulateQueue,
+} from './audioSaga'
+
+function* rootSaga () {
     yield all([
         // add an entry for every saga to listen for
         dataSaga,
@@ -22,7 +29,10 @@ import {
         userNoteFetch,
         userNoteGetContent,
         userNoteSave,
-        userNoteDelete
+        userNoteDelete,
+        audioGetDomain,
+        audioPopulateQueue,
+        audioGetQueue,
     ]);
 }
 
