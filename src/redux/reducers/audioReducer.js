@@ -4,6 +4,8 @@ import {
     AUDIO_LOAD_DOMAIN,
     AUDIO_LOAD_DOMAIN_SUCCESS,
     AUDIO_LOAD_DOMAIN_ERROR,
+    AUDIO_POPULATE_QUEUE,
+    AUDIO_CREATE_QUEUE,
     AUDIO_LOAD_QUEUE,
     AUDIO_LOAD_QUEUE_SUCCESS,
     AUDIO_LOAD_QUEUE_ERROR,
@@ -51,9 +53,12 @@ export default function(state = INITIAL_STATE, action = {}) {
                 domain_loaded: true,
                 domain_error: action.status,
             }
+        case AUDIO_CREATE_QUEUE:
+        case AUDIO_POPULATE_QUEUE:
         case AUDIO_LOAD_QUEUE:
             return {
                 ...state,
+                queue: [],
                 queue_loading: true,
                 queue_loaded: false,
                 queue_error: null,

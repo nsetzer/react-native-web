@@ -94,6 +94,7 @@ class ModalDialog extends React.PureComponent {
     }
 
 }
+
 class FadeInView extends React.Component {
   state = {
     fadeAnim: new Animated.Value(0),  // Initial value for opacity: 0

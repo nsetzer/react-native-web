@@ -2,6 +2,8 @@
 
 import axios from 'axios';
 
+import { serialize } from './common'
+
 export const env = {baseUrl: ''}
 
 if (process.env.NODE_ENV === "development" ||
@@ -82,6 +84,13 @@ export function libraryDomainInfo() {
     return axios.get(url, config);
 }
 
+export function historyIncrementPlaycount(song_id) {
+    var url = env.baseUrl + '/api/library/history/increment'
+    var body = [song_id, ]
+    const config = authConfig();
+    return axios.post(url, body, config);
+}
+
 export function queueGetSongs() {
     const url = env.baseUrl + '/api/queue'
     const config = authConfig();
@@ -90,6 +99,12 @@ export function queueGetSongs() {
 
 export function queuePopulate() {
     const url = env.baseUrl + '/api/queue/populate'
+    const config = authConfig();
+    return axios.get(url, config);
+}
+
+export function queueCreate(query) {
+    const url = env.baseUrl + '/api/queue/create' + serialize({query})
     const config = authConfig();
     return axios.get(url, config);
 }

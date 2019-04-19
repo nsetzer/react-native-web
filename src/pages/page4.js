@@ -38,7 +38,6 @@ const styles = StyleSheet.create({
   footer: {
     height: 100,
     width: '100%',
-    backgroundColor: "rgba(200, 0, 0, .3)"
   },
   row: {
     flex: 1,

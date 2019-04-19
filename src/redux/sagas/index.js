@@ -19,6 +19,7 @@ import {
     audioGetDomain,
     audioGetQueue,
     audioPopulateQueue,
+    audioCreateQueue,
 } from './audioSaga'
 
 function* rootSaga () {
@@ -32,6 +33,7 @@ function* rootSaga () {
         userNoteDelete,
         audioGetDomain,
         audioPopulateQueue,
+        audioCreateQueue,
         audioGetQueue,
     ]);
 }

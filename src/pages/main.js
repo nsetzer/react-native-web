@@ -13,6 +13,7 @@ import Page3 from './page3'
 import Page4 from './page4'
 import Page4Edit from './page4edit'
 import Page5 from './page5'
+import QueuePage from './queue'
 
 const styles = StyleSheet.create({
   container: {
@@ -53,7 +54,7 @@ export class MainPage extends React.Component {
 
         return (
             <ScrollView stickyHeaderIndices={[0]} contentContainerStyle={{ flex: 1 }}>
-                <HeaderPage />
+                <HeaderPage/>
 
                 <Switch redirect='/u/p1'>
                     <Route name='main-switch' path='/u/p1'><Page1/></Route>
@@ -64,6 +65,7 @@ export class MainPage extends React.Component {
                     <Route name='main-switch' path='/u/p5'><Page5/></Route>
                     <Route name='main-switch' path='/u/p5/:root'><Page5/></Route>
                     <Route name='main-switch' path='/u/p5/:root/:path*'><Page5/></Route>
+                    <Route name='main-switch' path='/u/queue'><QueuePage/></Route>
                 </Switch>
             </ScrollView>
         )

@@ -21,8 +21,10 @@ export const fsGetPath = api.fsGetPath
 
 export const libraryGetSong = api.libraryGetSong
 export const libraryDomainInfo = api.libraryDomainInfo
+export const historyIncrementPlaycount = api.historyIncrementPlaycount
 export const queueGetSongs = api.queueGetSongs
 export const queuePopulate = api.queuePopulate
+export const queueCreate = api.queueCreate
 
 // ---------------------------------------
 

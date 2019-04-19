@@ -1,5 +1,6 @@
 import {
     AUDIO_LOAD_DOMAIN,
+    AUDIO_CREATE_QUEUE,
     AUDIO_POPULATE_QUEUE,
     AUDIO_LOAD_QUEUE,
     AUDIO_PLAY_SONG,
@@ -10,6 +11,13 @@ import {
 export function audioLoadDomain() {
     return {
         type: AUDIO_LOAD_DOMAIN,
+    }
+}
+
+export function audioCreateQueue(query) {
+    return {
+        type: AUDIO_CREATE_QUEUE,
+        query: query,
     }
 }
 

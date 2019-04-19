@@ -25,13 +25,9 @@ export class HeaderPage extends React.Component {
     render() {
         return (
                 <View style={styles.container}>
-                <Text>Welcome to React Native Web️ </Text>
-
                 <Sound />
                 <View style={styles.row} >
-                    <Button title='Route1' onPress={()=>{this.props.pushLocation('/u/p1')}} />
-                    <Button title='Route2' onPress={()=>{this.props.pushLocation('/u/p2')}} />
-                    <Button title='Route3' onPress={()=>{this.props.pushLocation('/u/p3')}} />
+                    <Button title='Queue' onPress={()=>{this.props.pushLocation('/u/queue')}} />
                     <Button title='Notes' onPress={()=>{this.props.pushLocation('/u/p4')}} />
                     <Button title='Storage' onPress={()=>{this.props.pushLocation('/u/p5/')}} />
                 </View>
