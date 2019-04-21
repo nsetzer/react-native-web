@@ -100,7 +100,7 @@ export class Sound extends React.PureComponent {
     console.log("load: " + url)
     const sound = new Howl({
       src: [url],
-      format: ['mp3'],
+      format: ['ogg'],
       html5: true,
       autoplay: false,
       onload: this.onLoad.bind(this),
@@ -284,7 +284,7 @@ export class Sound extends React.PureComponent {
           var url = env.baseUrl + '/api/library/' + song.id + '/audio'
 
           url += '?token=' + this.props.token
-          url += '&mode=mp3'
+          url += '&mode=ogg'
 
           this.load(url)
         }

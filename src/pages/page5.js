@@ -16,7 +16,6 @@ import HyperLink from '../components/HyperLink'
 import SvgFolder from '../assets/icon/folder.svg'
 import SvgFile from '../assets/icon/file.svg'
 
-
 export const Svg = 'img';
 
 const styles = StyleSheet.create({

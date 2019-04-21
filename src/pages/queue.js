@@ -58,16 +58,20 @@ class ListItem extends React.PureComponent {
 
     render() {
 
-        return (
-            <View style={styles.listItemContainer}>
-                <View style={styles.listItemRow}>
-
+        /*
                     <View style={{
                             borderColor: '#000000',
                             borderWidth: 3,
                             width: 80,
                             height: 60}}>
                     </View>
+        */
+
+        return (
+            <View style={styles.listItemContainer}>
+                <View style={styles.listItemRow}>
+
+
 
 
                     <Text>{this.props.queue_index == this.props.index ? "(" + (1 + this.props.index) + ")" : 1 + this.props.index}.</Text>
