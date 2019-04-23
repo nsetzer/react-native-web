@@ -32,8 +32,6 @@ import { env, historyIncrementPlaycount } from '../redux/api'
 // https://github.com/goldfire/howler.js/blob/master/examples/player/player.js
 // https://howlerjs.com/#player
 
-const sample_url = require('./sample.ogg');
-
 function formatTime(secs) {
     var minutes = Math.floor(secs / 60) || 0;
     var seconds = Math.floor(secs - minutes * 60) || 0;

@@ -12,11 +12,6 @@ import SvgMenu from '../assets/icon/menu.svg'
 export const Svg = 'img';
 
 const styles = StyleSheet.create({
-    container: {
-        //backgroundColor: '#2c3e50',
-        backgroundColor: '#406f9d',
-        height: 100
-    },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -30,17 +25,18 @@ const styles = StyleSheet.create({
 export class HeaderPage extends React.Component {
     render() {
         return (
-                <View style={styles.container}>
+            <View style={this.props.style}>
 
-                <View  style={{zIndex:30, position: 'fixed', left: 0, top: 0, width: 32, height: 32}}>
+                {this.props.showMenu?
+                  <View  style={{zIndex:30, position: 'fixed', left: 0, top: 0, width: 48, height: 48}}>
                     <TouchableOpacity onPress={() => {console.log(this.props.toggle); this.props.toggle && this.props.toggle()}}>
-                        <Svg src={SvgMenu} style={{width: 32, height: 32}}/>
+                      <Svg src={SvgMenu} style={{width: 48, height: 48}}/>
                     </TouchableOpacity>
-                </View>
+                  </View>:null}
 
                 <Sound />
 
-                </View>
+            </View>
         )
     }
 }

@@ -8,19 +8,13 @@ import { setAuthenticated, pushLocation, initLocation } from '../redux/actions/r
 import { env, fsGetPath, downloadFile, uploadFile } from '../redux/api'
 import { Switch, Route } from '../components/Route'
 
-        //console.log(NativeModules)
-        //console.log(NativeModules.ReactNativeDownloadManager)
-
 import HyperLink from '../components/HyperLink'
 
-import SvgFolder from '../assets/icon/folder.svg'
-import SvgFile from '../assets/icon/file.svg'
-
-export const Svg = 'img';
+import {Svg, SvgFile, SvgFolder} from '../components/svg'
 
 const styles = StyleSheet.create({
     listItemContainer: {
-        padding: 10,
+        padding: 0,
         borderColor: '#000000',
         borderWidth: 1,
         marginTop: 5,

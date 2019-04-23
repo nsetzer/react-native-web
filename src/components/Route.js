@@ -27,10 +27,21 @@ MainPage:
         </SubSwitch>
 */
 import React from 'react';
-import { Platform, BackHandler } from 'react-native';
+import { StyleSheet, Platform, BackHandler, Animated, KeyboardAvoidingView, View, TouchableOpacity, Text } from 'react-native';
 
 import { connect } from "react-redux";
 import { initLocation, pushLocation } from "../redux/actions/routeAction";
+
+
+const styles = StyleSheet.create({
+  container: {
+    height: '100%',
+  },
+  navItem: {
+    padding: 10,
+  },
+});
+
 
 // https://facebook.github.io/react-native/docs/backhandler.html
 
@@ -343,3 +354,100 @@ class ISwitch extends React.Component {
 }
 
 export const Switch = ctor(ISwitch);
+
+class INavMenu extends React.Component {
+    // props:
+    //   visible: whether to hide or show the menu. triggers an animation
+    //   complete(visible): function called when transition finishes
+
+    // todo: enhance NavMenu to  render child props
+    //      - have this class calculate slim mode by itself
+    //      - render children components in a view which correctly
+    //        sets the margin
+    //      - callback to emit state (fixed-position or drawer)
+    //      - add prop to pass in the list of objects to render
+    //      - add render prop for a function to render an object
+    //      - then move this component into the router file
+
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            position: new Animated.Value(-300),  // Initial value for opacity: 0
+            visible: false,
+            slimMode: false
+        }
+    }
+
+    static getDerivedStateFromProps(nextProps, prevState) {
+      if (nextProps.visible != prevState.visible) {
+          Animated.timing(
+            prevState.position,
+            {
+              toValue: nextProps.visible?0:-300,
+              duration: (!nextProps.slimMode||!prevState.slimMode)?0:325,
+            }
+          ).start(() => {nextProps.complete && nextProps.complete(nextProps.visible)});
+        }
+      return {visible: nextProps.visible, slimMode: nextProps.slimMode}
+    }
+
+    onPress(obj) {
+        if (obj.route) {
+            this.props.pushLocation(obj.route)
+            if (this.props.hide && this.props.slimMode) {
+                this.props.hide()
+            }
+        }
+    }
+
+    render () {
+        return (
+            <KeyboardAvoidingView>
+            <Animated.View style={{
+                zIndex: 25,
+                position: 'fixed',
+                width: 300,
+                top: 0,
+                left: this.state.position,
+                bottom: 0,
+                backgroundColor: 'white',
+                borderRightColor: 'black',
+                borderRightWidth:1,
+            }}>
+
+
+            {(this.props.visible&&this.props.slimMode)?
+
+            <TouchableOpacity onPress={() => {this.props.hide && this.props.hide()}}>
+            <View style={{position: 'fixed',
+                    top: 0,
+                    zIndex: 20,
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    backgroundColor: "#00000033"
+            }}></View></TouchableOpacity>:null}
+
+            <View style={{width: '100%', height: '100%', zIndex: 25, backgroundColor: 'white'}}>
+            {this.props.routes.map((obj) => {
+                return <TouchableOpacity onPress={() => this.onPress(obj)}>
+                    <Text style={styles.navItem}>{obj.text}</Text>
+                </TouchableOpacity>
+            })
+            }
+            </View>
+
+            </Animated.View>
+
+            <View style={{
+                marginLeft: (!this.state.slimMode)?300:0,
+                }}>
+                {this.props.children}
+            </View>
+            </KeyboardAvoidingView>
+        )
+    }
+}
+
+export const NavMenu = ctor(INavMenu);
