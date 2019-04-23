@@ -96,13 +96,13 @@ class ILoginForm extends React.Component {
 
     componentWillMount() {
         //if (this.props.isAuthenticated) {
-        //  this.props.pushLocation('/u/p1')
+        //  this.props.pushLocation('/u/queue')
         //}
     }
 
     componentDidUpdate() {
         if (this.props.isAuthenticated) {
-          this.props.pushLocation('/u/p1')
+          this.props.pushLocation('/u/queue')
         }
     }
 

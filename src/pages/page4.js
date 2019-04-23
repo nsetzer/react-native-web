@@ -8,6 +8,7 @@ import { connect } from "react-redux";
 import { setAuthenticated, pushLocation, initLocation } from '../redux/actions/routeAction'
 import { userNoteFetch, userNoteRequestContent, userNoteDelete, userNoteCreate } from '../redux/actions/userNoteAction'
 import { Switch, Route } from '../components/Route'
+import { Markdown } from '../components/markdown'
 
 const styles = StyleSheet.create({
   listItemContainer: {
@@ -138,7 +139,7 @@ class ListItem extends React.PureComponent {
                     </View>
                 </TouchableOpacity>
                 <View style={styles.summaryContainer}>
-                    <Text>{this._getText()}</Text>
+                    <Markdown source={this._getText()}/>
                 </View>
             </View>
         );
