@@ -402,6 +402,8 @@ class INavMenu extends React.Component {
     }
 
     render () {
+        // TODO: look for a way to eliminate zIndex
+        // or make the zIndex passed in with a prop
         return (
             <KeyboardAvoidingView>
             <Animated.View style={{

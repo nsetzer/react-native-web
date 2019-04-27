@@ -8,13 +8,15 @@ export const ROUTE_SET_AUTHENTICATED = 'ROUTE_SET_AUTHENTICATED'
 export const ROUTE_INIT_ACTION = 'ROUTE_INIT_ACTION'
 export const ROUTE_PUSH_ACTION = 'ROUTE_PUSH_ACTION'
 
+export const MODAL_SHOW = 'MODAL_SHOW'
+export const MODAL_HIDE = 'MODAL_HIDE'
+
 export const USER_LOGIN = 'USER_LOGIN'
 export const USER_SET_TOKEN = 'USER_SET_TOKEN'
 export const USER_AUTH_BEGIN = 'USER_AUTH_BEGIN'
 export const USER_AUTH_SUCCESS = 'USER_AUTH_SUCCESS'
 export const USER_AUTH_FAIL = 'USER_AUTH_FAIL'
 export const USER_REGISTER = 'USER_REGISTER'
-
 
 // notes have two basic actions
 // get the list of notes from the server

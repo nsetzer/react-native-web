@@ -121,6 +121,7 @@ class ListItem extends React.PureComponent {
         const textColor = this.props.selected ? 'red' : 'black';
         return (
             <View style={styles.listItemContainer}>
+
                 <TouchableOpacity onPress={this._onToggle}>
                     <View style={styles.titleContainer}>
                         <Text style={{color: textColor}}>{this.props.title}</Text>

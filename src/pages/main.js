@@ -9,6 +9,7 @@ import { pushLocation } from "../redux/actions/routeAction";
 
 import HeaderPage from './header'
 
+import Modal from './modal'
 import Page1 from './page1'
 import Page2 from './page2'
 import Page3 from './page3'
@@ -114,6 +115,13 @@ export class MainPage extends React.Component {
         //
 
         return (
+
+            <View>
+
+            {this.props.modalRenderFn?
+                    <Modal render={this.props.modalRenderFn}></Modal>:
+                    null}
+
             <NavMenu
                 routes={navRoutes}
                 visible={this.state.showMenu}
@@ -138,6 +146,8 @@ export class MainPage extends React.Component {
                 }} showMenu={!this.state.showMenu}
                 toggle={this.onToggle.bind(this)}/>
 
+
+
                 <View style={{
                     backgroundColor: '#FFFF0033',
                     width: '100%',
@@ -156,12 +166,15 @@ export class MainPage extends React.Component {
                     <Route name='main-switch' path='/u/queue'><QueuePage/></Route>
                 </Switch>
             </NavMenu>
+            </View>
+
         )
     }
 }
 
 
 const mapStateToProps = state => ({
+    modalRenderFn: state.modal.render
 });
 
 const bindActions = dispatch => ({
