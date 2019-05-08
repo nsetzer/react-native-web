@@ -108,3 +108,20 @@ export function queueCreate(query) {
     const config = authConfig();
     return axios.get(url, config);
 }
+
+export function storageGeneratePublicUri(root, path) {
+    const url = env.baseUrl + '/api/fs/public/' + root +'/path/' + path
+    const config = authConfig();
+    return axios.put(url, null, config);
+}
+
+export function storageRevokePublicUri(root, path) {
+    const url = env.baseUrl + '/api/fs/public/' + root +'/path/' + path + serialize({revoke: true})
+    const config = authConfig();
+    return axios.put(url, null, config);
+}
+
+export function storagePublicFileInfo(file_id) {
+    const url = env.baseUrl + '/api/fs/public/' + file_id + serialize({info: true})
+    return axios.get(url);
+}

@@ -1,4 +1,4 @@
-import { USER_LOGIN, USER_SET_TOKEN } from '../constants'
+import { USER_LOGIN, USER_SET_TOKEN, USER_CLEAR_TOKEN } from '../constants'
 
 export function userLogin(username, password) {
     return {
@@ -13,5 +13,11 @@ export function setAuthToken(username, token) {
         type: USER_SET_TOKEN,
         username,
         token
+    }
+}
+
+export function clearAuthToken() {
+    return {
+        type: USER_CLEAR_TOKEN,
     }
 }

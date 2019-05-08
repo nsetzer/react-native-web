@@ -9,6 +9,7 @@ import { AuthenticatedComponent, NotAuthenticatedComponent} from './components/A
 import LoginPage from './pages/login'
 import HomePage from './pages/home'
 import MainPage from './pages/main'
+import PublicFilePage from './pages/public_file'
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -65,16 +66,22 @@ export default class App extends React.Component {
 
         <View style={styles2.container}>
             <Switch redirect='/'>
+
                 <Route name='app-switch' path='/login'>
                     <NotAuthenticatedComponent redirect='/u/p1'>
                         <LoginPage />
                     </NotAuthenticatedComponent>
                 </Route>
+
                 <Route name='app-switch' path='/u/:path*'>
                     <AuthenticatedComponent redirect='/login'>
                         <MainPage />
                     </AuthenticatedComponent>
                 </Route>
+
+                <Route name='app-switch' path='/p/:fileId'><PublicFilePage/></Route>
+                <Route name='app-switch' path='/p/:fileId/:name'><PublicFilePage/></Route>
+
                 <Route name='app-switch' path='/'><HomePage /></Route>
             </Switch>
         </View>

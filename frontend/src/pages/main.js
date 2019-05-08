@@ -6,6 +6,7 @@ import { NavMenu, Router, Route, Switch } from '../components/Route'
 import { connect } from "react-redux";
 
 import { pushLocation } from "../redux/actions/routeAction";
+import { clearAuthToken } from "../redux/actions/userLoginAction";
 
 import HeaderPage from './header'
 
@@ -18,7 +19,7 @@ import Page4Edit from './page4edit'
 import Page5 from './page5'
 import QueuePage from './queue'
 
-import {SvgNowPlaying, SvgLibrary, SvgNotes, SvgStorage, SvgSettings} from '../components/svg'
+import {SvgNowPlaying, SvgLibrary, SvgNotes, SvgStorage, SvgSettings, SvgLogout} from '../components/svg'
 
 const styles = StyleSheet.create({
   container: {
@@ -36,31 +37,8 @@ const icon_style = {
     width: 48,
     height: 48,
 }
-const navRoutes = [
-    {
-        route: '/u/queue',
-        text: 'Now Playing',
-        icon: {url: SvgNowPlaying, style: icon_style}
-    },
-    {
-        text: 'Library',
-        icon: {url: SvgLibrary, style: icon_style}
-    },
-    {
-        route: '/u/p5',
-        text: 'Storage',
-        icon: {url: SvgStorage, style: icon_style}
-    },
-    {
-        route: '/u/p4',
-        text: 'Notes',
-        icon: {url: SvgNotes, style: icon_style}
-    },
-    {
-        text: 'Settings',
-        icon: {url: SvgSettings, style: icon_style}
-    },
-]
+
+
 
 export class MainPage extends React.Component {
 
@@ -122,6 +100,48 @@ export class MainPage extends React.Component {
         this.setState({showMenu: !this.state.showMenu})
     }
 
+    onLogout() {
+
+        console.log("on logout")
+        this.props.clearAuthToken()
+        this.props.pushLocation('/')
+    }
+
+    getRoutes() {
+        const navRoutes = [
+            {
+                route: '/u/queue',
+                text: 'Now Playing',
+                icon: {url: SvgNowPlaying, style: icon_style}
+            },
+            {
+                text: 'Library',
+                icon: {url: SvgLibrary, style: icon_style}
+            },
+            {
+                route: '/u/p5',
+                text: 'Storage',
+                icon: {url: SvgStorage, style: icon_style}
+            },
+            {
+                route: '/u/p4',
+                text: 'Notes',
+                icon: {url: SvgNotes, style: icon_style}
+            },
+            {
+                text: 'Settings',
+                icon: {url: SvgSettings, style: icon_style}
+            },
+            {
+                text: 'Log Out',
+                icon: {url: SvgLogout, style: icon_style},
+                callback: this.onLogout.bind(this),
+            },
+        ]
+
+        return navRoutes
+    }
+
     render() {
         //  <View stickyHeaderIndices={[0]} contentContainerStyle={{ flex: 1 }}>
         //
@@ -135,7 +155,7 @@ export class MainPage extends React.Component {
                     null}
 
             <NavMenu
-                routes={navRoutes}
+                routes={this.getRoutes()}
                 visible={this.state.showMenu}
                 slimMode={this.state.slimMode}
                 hide={() => {this.setState({showMenu: false})}}>
@@ -156,8 +176,6 @@ export class MainPage extends React.Component {
                     shadowRadius: 2,
                 }} showMenu={!this.state.showMenu}
                 toggle={this.onToggle.bind(this)}/>
-
-
 
                 <View style={{
                     backgroundColor: '#FFFF0033',
@@ -183,13 +201,14 @@ export class MainPage extends React.Component {
     }
 }
 
-
 const mapStateToProps = state => ({
     modalRenderFn: state.modal.render
 });
 
 const bindActions = dispatch => ({
-});
+    pushLocation: (location) => dispatch(pushLocation(location)),
+    clearAuthToken: () => dispatch(clearAuthToken())
+})
 
 export default connect(mapStateToProps, bindActions)(MainPage);
 

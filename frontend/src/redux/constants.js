@@ -13,6 +13,7 @@ export const MODAL_HIDE = 'MODAL_HIDE'
 
 export const USER_LOGIN = 'USER_LOGIN'
 export const USER_SET_TOKEN = 'USER_SET_TOKEN'
+export const USER_CLEAR_TOKEN = 'USER_CLEAR_TOKEN'
 export const USER_AUTH_BEGIN = 'USER_AUTH_BEGIN'
 export const USER_AUTH_SUCCESS = 'USER_AUTH_SUCCESS'
 export const USER_AUTH_FAIL = 'USER_AUTH_FAIL'

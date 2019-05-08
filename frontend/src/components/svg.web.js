@@ -13,5 +13,6 @@ export const SvgLibrary = require('../assets/icon/playlist.svg')
 export const SvgNotes = require('../assets/icon/note.svg')
 export const SvgStorage = require('../assets/icon/documents.svg')
 export const SvgSettings = require('../assets/icon/settings.svg')
+export const SvgLogout = require('../assets/icon/logout.svg')
 
 export const Svg = 'img';

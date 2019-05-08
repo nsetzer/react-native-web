@@ -3,12 +3,10 @@
 import React from "react";
 import { Animated, ScrollView, View, Text, TextInput, Button, FlatList, TouchableWithoutFeedback, TouchableOpacity, StyleSheet, Image, NativeModules, TouchableHighlight } from "react-native";
 
-
-
 import { connect } from "react-redux";
 import { setAuthenticated, pushLocation, initLocation } from '../redux/actions/routeAction'
 import { modalShow, modalHide } from '../redux/actions/modalAction'
-import { env, fsGetPath, downloadFile, uploadFile } from '../redux/api'
+import { env, fsGetPath, downloadFile, uploadFile, storageRevokePublicUri, storageGeneratePublicUri } from '../redux/api'
 import { Switch, Route } from '../components/Route'
 
 import HyperLink from '../components/HyperLink'
@@ -161,7 +159,9 @@ class ListItem extends React.PureComponent {
         super(props);
 
         this.state = {
-            expand: false
+            expand: false,
+            public: null,  // set when a new link is generated and valid is false
+            valid: true,  // indicates that prop.data.public is valid
         }
     }
     show_preview(accept, reject) {
@@ -192,13 +192,11 @@ class ListItem extends React.PureComponent {
             //
             return (
 
-                <View style={{flex:1, justifyContent: 'center', alignItems: 'center'}}>
-                <View style={{width: '80vw', height: '80vh', flex:1, justifyContent: 'center', alignItems: 'center'}}>
+                <View style={{maxWidth: '80vw', maxHeight: '80vh', flex:1, justifyContent: 'center', alignItems: 'center'}}>
                     <Video
                         style={{maxWidth: '100%', maxHeight: '100%', backgroundColor: '#000000'}}
                         source={url}
                     />
-                </View>
                 </View>
                 )
         } else {
@@ -208,6 +206,41 @@ class ListItem extends React.PureComponent {
                 </View>
             )
         }
+    }
+
+    onGeneratePublicLink() {
+
+        var path = ''
+        if (this.props.path !== '') {
+            path += this.props.path + '/'
+        }
+        path += this.props.data.name
+
+        storageGeneratePublicUri(this.props.root, path).then(
+            result => {this.setState({public: result.data.result.id, valid:false})},
+            error => {console.log(error)}
+        );
+
+    }
+
+    onRevokePublicLink() {
+        var path = ''
+        if (this.props.path !== '') {
+            path += this.props.path + '/'
+        }
+        path += this.props.data.name
+
+        storageRevokePublicUri(this.props.root, path).then(
+            result => {this.setState({public: null, valid:false})},
+            error => {console.log(error)}
+        );
+    }
+
+    onOpenPublicLink() {
+        const public_id = this.state.valid?this.props.data.public:this.state.public
+        const url = env.baseUrl + "/p/" + public_id
+        var win = window.open(url, '_blank');
+        win.focus()
     }
 
     render() {
@@ -223,6 +256,9 @@ class ListItem extends React.PureComponent {
             url += this.props.path + '/'
         }
         url += this.props.data.name + '?token=' + this.props.token
+
+
+        const public_id = this.state.valid?this.props.data.public:this.state.public
 
         // <Text numberOfLines={1} style={{padding: 10, flex: 1}}>{this.props.data.name}</Text>
         // this.setState({expand: !this.state.expand})}
@@ -264,11 +300,15 @@ class ListItem extends React.PureComponent {
                         set flexGrow to grow the container
                         set width to 0 to force the trait
                     */}
-                    <TouchableOpacity
-                        onPress={() => {this.props.onPress(this.props.data)}}
-                        style={{flexGrow: 1, width: 0, padding: 10}}>
+                    {this.props.data.isDir?
+                        <TouchableOpacity
+                            onPress={() => {this.props.onPress(this.props.data)}}
+                            style={{flexGrow: 1, width: 0, padding: 10}}>
+                                <Text numberOfLines={1}>{this.props.data.name}</Text>
+                        </TouchableOpacity>:
+                        <View style={{flexGrow: 1, width: 0, padding: 10}}>
                             <Text numberOfLines={1}>{this.props.data.name}</Text>
-                    </TouchableOpacity>
+                        </View>}
 
                     {/*extra margin on the right to improve scroll experience on mobile*/}
 
@@ -306,6 +346,14 @@ class ListItem extends React.PureComponent {
                         <Text>Encryption: {this.props.data.encryption||'none'}</Text>
                         <Text>Permission: {this.props.data.permission.toString(8)}</Text>
                         <Text>Modified Date: {new Date(this.props.data.mtime*1000).toUTCString()}</Text>
+                        {public_id?<View><TouchableOpacity onPress={() => {this.onOpenPublicLink()}}><Text>Public: {public_id}</Text></TouchableOpacity>
+                            <TouchableOpacity onPress={() => {this.onRevokePublicLink()}}>
+                                <Text style={{padding: 10}}>Delete Public Link</Text>
+                            </TouchableOpacity>
+                            </View>:
+                            <TouchableOpacity onPress={() => {this.onGeneratePublicLink()}}>
+                                <Text style={{padding: 10}}>Generate Public Link</Text>
+                            </TouchableOpacity>}
                     </View>
                     :null}
 

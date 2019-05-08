@@ -26,6 +26,10 @@ export const queueGetSongs = api.queueGetSongs
 export const queuePopulate = api.queuePopulate
 export const queueCreate = api.queueCreate
 
+export const storageGeneratePublicUri = api.storageGeneratePublicUri
+export const storageRevokePublicUri = api.storageRevokePublicUri
+export const storagePublicFileInfo = api.storagePublicFileInfo
+
 // ---------------------------------------
 
 function saveBlob(blob, fileName) {

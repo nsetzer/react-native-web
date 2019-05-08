@@ -318,6 +318,10 @@ class ISwitch extends React.Component {
             return null
         }
 
+        if (!this.props.location) {
+            return null
+        }
+
         for (var i=0; i < this.props.children.length; i++) {
             var child = this.props.children[i]
             if (React.isValidElement(child) && child.props.hasOwnProperty('path')) {
@@ -399,6 +403,8 @@ class INavMenu extends React.Component {
             if (this.props.hide && this.props.slimMode) {
                 this.props.hide()
             }
+        } else if (obj.callback) {
+            obj.callback()
         }
     }
 
