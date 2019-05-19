@@ -2,8 +2,8 @@ import React from 'react';
 import 'resize-observer-polyfill/dist/ResizeObserver.global'
 import { View, StyleSheet, Text } from 'react-native';
 
-import { Router, Route, Switch } from './components/Route'
-import { AuthenticatedComponent, NotAuthenticatedComponent} from './components/Auth'
+import { Router, Route, Switch } from './common/components/Route'
+import { AuthenticatedComponent, NotAuthenticatedComponent} from './common/components/Auth'
 
 
 import LoginPage from './pages/login'
@@ -33,7 +33,7 @@ class ErrorBoundary extends React.Component {
       return (
         <View>
             <Text>Something went wrong.</Text>
-            <Text>{this.state.error}</Text>
+            <Text>{JSON.stringify(this.state.error)}</Text>
         </View>
       );
     }

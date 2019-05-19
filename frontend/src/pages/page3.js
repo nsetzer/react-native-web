@@ -4,7 +4,7 @@ import { View, Text, Button } from "react-native";
 
 import { connect } from "react-redux";
 import { setAuthenticated, pushLocation, initLocation } from '../redux/actions/routeAction'
-import { Switch, Route } from '../components/Route'
+import { Switch, Route } from '../common/components/Route'
 
 export class Page3 extends React.Component {
 

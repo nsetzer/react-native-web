@@ -6,11 +6,13 @@ import { combineReducers } from 'redux';
 
 import example from './exampleReducer';
 import appData from './dataReducer'
-import route from './routeReducer'
 import userLogin from './userLoginReducer'
 import userNote from './userNoteReducer'
 import audio from './audioReducer'
 import modal from './modalReducer'
+
+import {routeReducer} from '../../common/components/Route';
+import {authReducer} from '../../common/components/Auth';
 
 // the name here is used as the top level key
 // in the state dictionary. the value of that key will
@@ -20,7 +22,8 @@ import modal from './modalReducer'
 const reducers = {
     example,
     appData,
-    route,
+    route: routeReducer,
+    auth: authReducer,
     userLogin,
     userNote,
     audio,

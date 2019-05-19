@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 import { USER_LOGIN, USER_AUTH_BEGIN, USER_AUTH_SUCCESS, USER_AUTH_FAIL } from '../constants'
 import { put, takeEvery } from 'redux-saga/effects'
-import { authenticate } from '../api/index'
+import { authenticate } from '../../common/api'
 
 function* userLogin (action) {
   try {

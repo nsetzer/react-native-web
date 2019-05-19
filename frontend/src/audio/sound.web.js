@@ -26,7 +26,7 @@ import {
   audioPrevSong,
 } from "../redux/actions/audioAction";
 
-import { env, historyIncrementPlaycount } from '../redux/api'
+import { env, historyIncrementPlaycount } from '../common/api'
 
 // https://github.com/goldfire/howler.js#documentation
 // https://github.com/goldfire/howler.js/blob/master/examples/player/player.js
@@ -331,7 +331,7 @@ export class Sound extends React.PureComponent {
 
         <TextInput
           onChangeText={(text) => this.setVolume(parseInt(text)/100.0)}
-          defaultValue={50}
+          defaultValue={'50'}
           maxLength={3}/>
         </View>
 

@@ -7,10 +7,11 @@ import { View, Text, Button, FlatList, TouchableOpacity, StyleSheet } from "reac
 import { connect } from "react-redux";
 import { setAuthenticated, pushLocation, initLocation } from '../redux/actions/routeAction'
 import { userNoteFetch, userNoteRequestContent, userNoteDelete, userNoteCreate } from '../redux/actions/userNoteAction'
-import { Switch, Route } from '../components/Route'
-import { Markdown } from '../components/markdown'
-import { Svg, SvgEdit, SvgDiscard } from '../components/svg'
+import { Switch, Route } from '../common/components/Route'
+import { Markdown } from '../common/components/markdown'
+import { Svg, SvgEdit, SvgDiscard } from '../common/components/svg'
 
+console.error(" *** SVG IS  " + Svg)
 const styles = StyleSheet.create({
   listItemContainer: {
     padding: 10,
@@ -48,7 +49,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flex: 1,
     flexDirection: 'row',
-    justifyContent: 'flex-begin',
+    justifyContent: 'flex-start',
     padding: 5,
   },
 });

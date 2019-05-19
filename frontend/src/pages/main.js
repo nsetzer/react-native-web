@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Animated, Platform, TouchableOpacity, View, Text, TextInput, ScrollView, StyleSheet, KeyboardAvoidingView } from "react-native";
-import { NavMenu, Router, Route, Switch } from '../components/Route'
+import { NavMenu, Router, Route, Switch } from '../common/components/Route'
 
 import { connect } from "react-redux";
 
@@ -19,7 +19,7 @@ import Page4Edit from './page4edit'
 import Page5 from './page5'
 import QueuePage from './queue'
 
-import {SvgNowPlaying, SvgLibrary, SvgNotes, SvgStorage, SvgSettings, SvgLogout} from '../components/svg'
+import {SvgNowPlaying, SvgLibrary, SvgNotes, SvgStorage, SvgSettings, SvgLogout} from '../common/components/svg'
 
 const styles = StyleSheet.create({
   container: {

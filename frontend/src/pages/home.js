@@ -111,7 +111,7 @@ class IHomePage extends React.Component {
         <KeyboardAvoidingView behavior="padding" style={styles2.container}>
 
                 <View style={styles2.loginContainer}>
-                    <Image resizeMode="contain" style={styles2.logo} source={require('../assets/images/robot-dev.png')} />
+                    <Image resizeMode="contain" style={styles2.logo} source={require('../common/assets/images/robot-dev.png')} />
                 </View>
                <View style={styles2.formContainer}>
                    <HomeForm />

@@ -6,12 +6,12 @@ import { Animated, ScrollView, View, Text, TextInput, Button, FlatList, Touchabl
 import { connect } from "react-redux";
 import { setAuthenticated, pushLocation, initLocation } from '../redux/actions/routeAction'
 import { modalShow, modalHide } from '../redux/actions/modalAction'
-import { env, fsGetPath, downloadFile, uploadFile, storageRevokePublicUri, storageGeneratePublicUri } from '../redux/api'
-import { Switch, Route } from '../components/Route'
+import { env, fsGetPath, downloadFile, uploadFile, storageRevokePublicUri, storageGeneratePublicUri } from '../common/api'
+import { Switch, Route } from '../common/components/Route'
 
-import HyperLink from '../components/HyperLink'
+import HyperLink from '../common/components/HyperLink'
 
-import {Svg, SvgFile, SvgFolder, SvgMore} from '../components/svg'
+import {Svg, SvgFile, SvgFolder, SvgMore} from '../common/components/svg'
 
 // todo web compat layer for video
 // import Video from 'react-native-video';

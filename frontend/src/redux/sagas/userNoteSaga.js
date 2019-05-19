@@ -15,7 +15,7 @@ import {
     USER_NOTE_DELETE_ERROR,
 } from '../constants'
 import { put, takeEvery } from 'redux-saga/effects'
-import { getNotes, getNoteContent, saveNote, deleteNote } from '../api/index'
+import { getNotes, getNoteContent, saveNote, deleteNote } from '../../common/api'
 
 
 function* _userNoteFetch(action) {

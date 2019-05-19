@@ -19,7 +19,7 @@ import {
     queueGetSongs,
     queuePopulate,
     queueCreate
-} from '../api/index'
+} from '../../common/api'
 
 import { put, takeEvery } from 'redux-saga/effects'
 

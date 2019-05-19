@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flex: 1,
     flexDirection: 'row',
-    justifyContent: 'flex-begin',
+    justifyContent: 'flex-start',
     padding: 5,
   },
   button: {

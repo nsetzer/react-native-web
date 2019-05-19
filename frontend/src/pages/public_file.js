@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, Button, StyleSheet, KeyboardAvoidingView, Image, TouchableOpacity } from "react-native";
 
 import { connect } from "react-redux";
-import { env, downloadFile, storagePublicFileInfo } from '../redux/api'
+import { env, downloadFile, storagePublicFileInfo } from '../common/api'
 
 const styles = StyleSheet.create({
     container: {
@@ -56,6 +56,12 @@ export class PublicFile extends React.Component {
             (error) => {console.log(error);})
     }
 
+    onPreview() {
+        const url = env.baseUrl + '/api/fs/public/' + this.props.route.match.fileId + '/' + this.state.file.name + "?dl=0"
+        var win = window.open(url, '_blank');
+        win.focus();
+    }
+
     componentDidMount() {
         storagePublicFileInfo(this.props.route.match.fileId).then(
             (result) => {this.setState({file: result.data.result.file})},
@@ -72,7 +78,7 @@ export class PublicFile extends React.Component {
             <KeyboardAvoidingView behavior="padding" style={styles.container}>
 
                <View style={styles.loginContainer}>
-                    <Image resizeMode="contain" style={styles.logo} source={require('../assets/images/robot-dev.png')} />
+                    <Image resizeMode="contain" style={styles.logo} source={require('../common/assets/images/robot-dev.png')} />
                </View>
                <View style={styles.formContainer}>
 
@@ -81,8 +87,13 @@ export class PublicFile extends React.Component {
                        <Text>Download: {this.state.file.name}</Text>
                     </TouchableOpacity>:
                     null}
-                   <Text>Size: {this.state.file?this.state.file.size:''}</Text>
-                   <Text>Modified Date: {this.state.file?new Date(this.state.file.mtime*1000).toUTCString():''}</Text>
+                {this.state.file?
+                    <TouchableOpacity onPress={() => this.onPreview()}>
+                       <Text>Preview: {this.state.file.name}</Text>
+                    </TouchableOpacity>:
+                    null}
+                <Text>Size: {this.state.file?this.state.file.size:''}</Text>
+                <Text>Modified Date: {this.state.file?new Date(this.state.file.mtime*1000).toUTCString():''}</Text>
 
                </View>
 

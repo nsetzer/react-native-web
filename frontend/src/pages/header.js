@@ -7,7 +7,7 @@ import { connect } from "react-redux";
 import { pushLocation } from "../redux/actions/routeAction";
 import Sound from "../audio/sound";
 
-import SvgMenu from '../assets/icon/menu.svg'
+import SvgMenu from '../common/assets/icon/menu.svg'
 
 export const Svg = 'img';
 
