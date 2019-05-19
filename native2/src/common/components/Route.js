@@ -353,12 +353,13 @@ class ISwitch extends React.Component {
                 // from recomputing the match
                 var match = patternMatch(child.props.path, this.props.location);
                 if (match !== null) {
+                    console.log("route to (" + i + "): " + this.props.location)
                     return child
                 }
             }
         }
 
-
+        console.log("route error")
         // Render can be run prior to the props being initialized
         // which can cause an invalid redirect
         if (this.props.initialized) {
