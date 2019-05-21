@@ -164,6 +164,7 @@ class ListItem extends React.PureComponent {
             valid: true,  // indicates that prop.data.public is valid
         }
     }
+
     show_preview(accept, reject) {
 
         var url = (env.baseUrl + '/api/fs/' +
@@ -395,7 +396,10 @@ export class Page5 extends React.Component {
         const path = this.props.route.match.path || ''
 
         this.state = {
-            rootNames: ['default'],
+            rootNames: [
+                {name: 'default', text: 'All Files'},
+                {name: 'public', text: 'Public Files'},
+            ],
             directoryItems: [],
             root: root,
             path: path,
@@ -453,6 +457,9 @@ export class Page5 extends React.Component {
        if (!this.state.loading && !this.state.loaded) {
            if (this.state.root !== undefined) {
                this.setState({'loading': true, loaded: false, directoryItems: [], })
+
+               // TODO: if root is 'public' use an alternative api to list
+               // only public files
                fsGetPath(this.state.root, this.state.path)
                    .then(this.onListDirSuccess.bind(this))
                    .catch(this.onListDirError.bind(this));
@@ -498,8 +505,8 @@ export class Page5 extends React.Component {
 
     rootRenderItem = ({item}) => (
         <ListItemC
-            data={{name:item, isDir:true}}
-            onPress={this.rootOnPress}
+            data={{name:item.text, isDir:true}}
+            onPress={(_) => {this.rootOnPress(item)}}
         ></ListItemC>
     );
 

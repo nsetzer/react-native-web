@@ -184,15 +184,15 @@ export class MainPage extends React.Component {
                 }}></View>
 
                 <Switch redirect='/u/p1'>
-                    <Route name='main-switch' path='/u/p1'><Page1/></Route>
-                    <Route name='main-switch' path='/u/p2'><Page2/></Route>
-                    <Route name='main-switch' path='/u/p3'><Page3/></Route>
-                    <Route name='main-switch' path='/u/p4'><Page4/></Route>
-                    <Route name='main-switch' path='/u/p4/:uid'><Page4Edit/></Route>
-                    <Route name='main-switch' path='/u/p5'><Page5/></Route>
-                    <Route name='main-switch' path='/u/p5/:root'><Page5/></Route>
-                    <Route name='main-switch' path='/u/p5/:root/:path*'><Page5/></Route>
-                    <Route name='main-switch' path='/u/queue'><QueuePage/></Route>
+                    <Route name='main-switch' path='/u/p1'             ><Page1     /></Route>
+                    <Route name='main-switch' path='/u/p2'             ><Page2     /></Route>
+                    <Route name='main-switch' path='/u/p3'             ><Page3     /></Route>
+                    <Route name='main-switch' path='/u/p4'             ><Page4     /></Route>
+                    <Route name='main-switch' path='/u/p4/:uid'        ><Page4Edit /></Route>
+                    <Route name='main-switch' path='/u/p5'             ><Page5     /></Route>
+                    <Route name='main-switch' path='/u/p5/:root'       ><Page5     /></Route>
+                    <Route name='main-switch' path='/u/p5/:root/:path*'><Page5     /></Route>
+                    <Route name='main-switch' path='/u/queue'          ><QueuePage /></Route>
                 </Switch>
             </NavMenu>
             </View>
