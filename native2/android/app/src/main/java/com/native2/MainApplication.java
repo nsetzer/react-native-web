@@ -3,7 +3,6 @@ package com.native2;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
-import io.realm.react.RealmReactPackage;
 import com.meedan.ShareMenuPackage;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
@@ -14,6 +13,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.horcrux.svg.SvgPackage;
+
+import org.pgsqlite.SQLitePluginPackage;
 
 public class MainApplication extends Application implements ReactApplication {
 
@@ -28,7 +29,8 @@ public class MainApplication extends Application implements ReactApplication {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
           new ShareMenuPackage(),
-          new SvgPackage()
+          new SvgPackage(),
+          new SQLitePluginPackage()
       );
     }
 

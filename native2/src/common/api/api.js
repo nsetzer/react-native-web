@@ -20,8 +20,10 @@ if (Platform.OS === 'web') {
     if (process.env.NODE_ENV === "development" ||
         process.env.NODE_ENV === "dev" ||
         process.env.NODE_ENV === "test") {
-        env.baseUrl = "http://localhost:4200"
+        // Note: replace with the host address running the development server
+        env.baseUrl = "http://192.168.1.149:4200"
     } else {
+        // Note: replace with the host address of the production server
         env.baseUrl = "https://yueapp.duckdns.org"
     }
 }
@@ -30,9 +32,19 @@ if (process.env.REACT_APP_BACKEND_PATH) {
     env.baseUrl = process.env.REACT_APP_BACKEND_PATH
 }
 
+var _axiosConfig = {withCredentials: true, auth: {username: "admin", password: 'admin'}}
+
+export function setAxiosConfig(config) {
+    _axiosConfig = config
+}
+
 function authConfig() {
-    const token = localStorage.getItem("user_token")
-    const config = {withCredentials: true, headers: {Authorization: token}}
+    if (Platform.OS === 'web') {
+        const token = localStorage.getItem("user_token")
+        return {withCredentials: true, headers: {Authorization: token}}
+    } else {
+        return _axiosConfig;
+    }
     return config
 }
 
@@ -83,6 +95,13 @@ export function fsGetPath(root, path) {
     return axios.get(url, config);
 }
 
+export function librarySearch(query, limit=500, page=0) {
+
+    const url = env.baseUrl + '/api/library' + serialize({query, limit, page})
+    console.log(url)
+    const config = authConfig();
+    return axios.get(url, config);
+}
 
 export function libraryGetSong(song_id) {
     const url = env.baseUrl + '/api/library/' + song_id

@@ -200,12 +200,15 @@ export function patternMatch(pattern, location) {
 const mapStateToProps = state => ({
     initialized: state.route.initialized,
     location: state.route.location,
-    authenticated: state.route.authenticated
+    history: state.route.history,
 });
 
 const bindActions = dispatch => ({
     pushLocation: (location) => {
         dispatch(pushLocation(location))
+    },
+    popLocation: () => {
+        dispatch(popLocation())
     },
     initLocation: (location) => {
         dispatch(initLocation(location))
@@ -227,29 +230,33 @@ class IRouter extends React.Component {
             this.props.initLocation(window.location.pathname);
           };
         } else {
-          this.props.initLocation("/")
+          this.props.initLocation("/u/library") // TODO
         }
     }
 
     componentDidMount() {
-        //if (Platform.OS === 'android') {
-        //    BackHandler.addEventListener('hardwareBackPress',
-        //        this.handleBackPress);
-        //}
+        if (Platform.OS === 'android') {
+            BackHandler.addEventListener('hardwareBackPress',
+                this.handleBackPress);
+        }
     }
 
     componentWillUnmount() {
-        //if (Platform.OS === 'android') {
-        //    BackHandler.removeEventListener('hardwareBackPress',
-        //        this.handleBackPress);
-        //}
+        if (Platform.OS === 'android') {
+            BackHandler.removeEventListener('hardwareBackPress',
+                this.handleBackPress);
+        }
     }
 
     handleBackPress = () => {
 
         console.log('pop location')
-        // this.props.popLocation();
-        // return false if history is empty
+
+        if (this.props.history.length === 0) {
+            return false;
+        }
+
+        this.props.popLocation();
 
         return true;
     }
@@ -283,16 +290,6 @@ class IRoute extends React.Component {
 
     }
     render() {
-
-        // do not render the Component Children if authentication
-        // is required and the router has not been authenticated
-        const msg = (this.props.name || 'undefined') + " | " + this.props.path  + " | " + this.props.location
-
-        const v1 = this.props.auth || false
-        const v2 = !this.props.authenticated
-        if (v1 && v2) {
-            return null
-        }
 
         const match = patternMatch(this.props.path, this.props.location)
 
@@ -337,15 +334,6 @@ class ISwitch extends React.Component {
         for (var i=0; i < this.props.children.length; i++) {
             var child = this.props.children[i]
             if (React.isValidElement(child) && child.props.hasOwnProperty('path')) {
-
-                // check to see if the child requires authentication
-                // if i does and this is not authenticated, skip to the
-                // next route child
-                const v1 = child.props.auth || false
-                const v2 = !this.props.authenticated
-                if (v1 && v2) {
-                    continue;
-                }
 
                 // TODO: only compute match once
                 // compute path match, and push props downward
@@ -497,6 +485,7 @@ export const NavMenu = ctor(INavMenu);
 
 export const ROUTE_INIT_ACTION = 'ROUTE_INIT_ACTION'
 export const ROUTE_PUSH_ACTION = 'ROUTE_PUSH_ACTION'
+export const ROUTE_POP_ACTION  = 'ROUTE_POP_ACTION'
 
 // set the current location, without effecting browser history
 
@@ -519,14 +508,21 @@ export const pushLocation = location => {
     }
 }
 
+export const popLocation = () => {
+    return {
+      type: ROUTE_POP_ACTION,
+    }
+}
+
 const INITIAL_STATE = {
-    'initialized': false,
-    'location': '/',
+    initialized: false,
+    location: '/',
     history: []
 }
 
 export function routeReducer(state = INITIAL_STATE, action = {}) {
     switch(action.type) {
+
         case ROUTE_INIT_ACTION:
             console.log("init:" + action.payload);
             return {
@@ -534,21 +530,37 @@ export function routeReducer(state = INITIAL_STATE, action = {}) {
                 initialized: true,
                 location: action.payload,
             }
+
         case ROUTE_PUSH_ACTION:
 
             if (Platform.OS === 'web') {
                 window.history.pushState(null, '', action.payload);
             } else {
+                // TODO: history should hold a maximum of 3 entries
+                // TODO: history should have special logic for logged in state
                 // PUSH
                 // [action.payload].concat(state.history).slice(0, MAX_LENGTH)
-                // POP
-                // state.history.slice(1, MAX_LENGTH)
+
             }
             console.log("push:" + action.payload);
             return {
                 ...state,
                 location: action.payload,
           }
+
+        case ROUTE_POP_ACTION:
+
+            if (Platform.OS === 'web') {
+                // window.history.pushState(null, '', action.payload);
+            } else {
+                // POP
+                // state.history.slice(1, MAX_LENGTH)
+            }
+
+            return {
+                ...state,
+            }
+
         default:
             return state
     }
