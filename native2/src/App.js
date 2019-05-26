@@ -10,6 +10,7 @@ import { Router, Route, Switch, NavMenu } from './common/components/Route'
 import { AuthenticatedComponent, NotAuthenticatedComponent} from './common/components/Auth'
 import { ForestView } from './common/components/ForestView'
 
+import { SqlDB } from './db'
 
 import {env, libraryDomainInfo} from './common/api'
 
@@ -29,12 +30,6 @@ const icon_style = {
     width: 48,
     height: 48,
 }
-
-const mapStateToProps = state => ({
-});
-
-const bindActions = dispatch => ({
-});
 
 class SharedText extends React.Component {
   constructor(props) {
@@ -77,50 +72,18 @@ export default class App extends React.Component {
         this.state = {
             showMenu: false,
             slimMode: true,
-            data: {
-                a0: {
-                    b0: [{ title: "a0-b0", }],
-                    b1: [{ title: "a0-b1", }],
-                    b2: [{ title: "a0-b2", }],
-                },
-                a1: {
-                    b0: [{ title: "a1-b0-0", }, { title: "a1-b0-1", }, { title: "a1-b0-2", }],
-                    b1: [{ title: "a1-b1-0", }, { title: "a1-b1-1", }, { title: "a1-b1-2", }],
-                    b2: [{ title: "a1-b2-0", }, { title: "a1-b2-1", }, { title: "a1-b2-2", }],
-                },
-                a2: {
-                    b0: [{ title: "a2-b0", }],
-                    b1: [{ title: "a2-b1", }],
-                    b2: [{ title: "a2-b2", }],
-                },
-                a3: {
-                    b0: [{ title: "a3-b0-0", }, { title: "a3-b0-1", }, { title: "a3-b0-2", }],
-                    b1: [{ title: "a3-b1-0", }, { title: "a3-b1-1", }, { title: "a3-b1-2", }],
-                    b2: [{ title: "a3-b2-0", }, { title: "a3-b2-1", }, { title: "a3-b2-2", }],
-                },
-            }
         }
     }
 
+
     render() {
 
-        /*
-        <ScrollView>
-            <TouchableOpacity onPress={() => {this.onPress()}}>
-            <Text style={{padding: 10}}>Hello World1</Text>
-            <SharedText />
-            </TouchableOpacity>
-            <ForestView data={this.state.data}/>
-        </ScrollView>
-             <Switch redirect='/'>
-                    <Route name='app-switch' path='/:path*'   ><LoginPage  /></Route>
-                    <Route name='app-switch' path='/u/:path*' ><MainPage    /></Route>
-                </Switch>
-        */
         return (
             <Provider store={store}>
+            <SqlDB/>
             <View>
             <Router>
+
                 <View style={{width: '100%', height: '100%'}}>
 
                 <Switch redirect='/'>
@@ -136,3 +99,4 @@ export default class App extends React.Component {
         );
     }
 }
+

@@ -4,137 +4,10 @@ import React from 'react';
 import { Text, View, TouchableOpacity, PermissionsAndroid } from "react-native";
 import { connect } from "react-redux";
 
-import { dbinit } from '../db';
 import { env, librarySearch, authenticate, downloadFile, dirs } from '../common/api';
 import ForestView from '../common/components/ForestView';
 
 import TrackPlayer from 'react-native-track-player';
-
-function hashString(s) {
-  var hash = 0, i, chr;
-  if (s.length === 0) return hash;
-  for (i = 0; i < s.length; i++) {
-    chr   = s.charCodeAt(i);
-    hash  = ((hash << 5) - hash) + chr;
-    hash |= 0; // Convert to 32bit integer
-  }
-  return hash;
-};
-
-function hashInt(v) {
-    return v|0
-}
-
-function hashFloat(v) {
-    return 0 // not implemented
-}
-
-function hashArray(a) {
-}
-
-function hashMap(m) {
-}
-
-function hashSchema(schema) {
-    return hashArray(schema)
-}
-
-/*
-    unused columns from librarySearch API
-    art_path: should not be in response
-    banished:
-    blocked:
-    domain_id:
-    equalizer: not useful
-    file_path: should not be in response
-    file_size: not useful
-    frequency: not useful
-*/
-
-
-function remoteSongToLocalSong(song) {
-
-    return {
-        uid: song.id,
-        user_id: song.user_id,
-
-        artist: song.artist,
-        artist_key: song.artist_key,
-        album: song.album,
-        title: song.title,
-        composer: song.composer,
-        comment: song.comment,
-        country: song.country,
-        language: song.language,
-        genre: song.genre,
-
-        play_count: song.play_count,
-        skip_count: song.skip_count,
-        year: song.year,
-        length: song.length,
-        rating: song.rating,
-
-        date_added: song.date_added,
-        last_played: song.last_played,
-    }
-}
-
-const dbSchema = [
-    {
-        name: 'users',
-        columns: [
-            {name: "spk",        type: "INTEGER PRIMARY KEY AUTOINCREMENT", },
-            {name: "uid",        type: "VARCHAR", },
-            {name: "username",   type: "VARCHAR", },
-            {name: "apikey",     type: "VARCHAR", },
-        ]
-    },
-    {
-        name: 'songs',
-        columns: [
-            {name: "spk",        type: "INTEGER PRIMARY KEY AUTOINCREMENT", },
-            {name: "uid",        type: "VARCHAR UNIQUE", },
-            {name: "user_id",    type: "VARCHAR NOT NULL", },
-
-            {name: "sync",       type: "INTEGER DEFAULT 0", }, // download this resource
-            {name: "synced",     type: "INTEGER DEFAULT 0", }, // resource has been downloaded
-
-            {name: "artist",     type: "VARCHAR NOT NULL", },
-            {name: "artist_key", type: "VARCHAR", },
-            {name: "album",      type: "VARCHAR NOT NULL", },
-            {name: "title",      type: "VARCHAR NOT NULL", },
-            {name: "composer",   type: "VARCHAR", },
-            {name: "comment",    type: "VARCHAR", },
-            {name: "country",    type: "VARCHAR", },
-            {name: "language",   type: "VARCHAR", },
-            {name: "genre",      type: "VARCHAR", },
-
-            {name: "file_path",      type: "VARCHAR", },
-            {name: "art_path",      type: "VARCHAR", },
-
-            {name: "play_count",  type: "INTEGER DEFAULT 0", },
-            {name: "skip_count",  type: "INTEGER DEFAULT 0", },
-            {name: "album_index",     type: "INTEGER DEFAULT 0", },
-            {name: "year",     type: "INTEGER DEFAULT 0", },
-            {name: "length",     type: "INTEGER DEFAULT 0", },
-            {name: "rating",     type: "INTEGER DEFAULT 0", },
-
-            {name: "date_added",     type: "INTEGER DEFAULT 0", },
-            {name: "last_played",     type: "INTEGER DEFAULT 0", },
-
-        ]
-    },
-    {
-        name: 'history',
-        columns: [
-            {name: "spk",        type: "INTEGER PRIMARY KEY AUTOINCREMENT", },
-            {name: "song_id",       type: "VARCHAR", },
-            {name: "user_id",       type: "VARCHAR", },
-            {name: "timestamp",     type: "INTEGER", },
-        ]
-    },
-]
-
 
 export class LibraryPage extends React.Component {
 
@@ -145,25 +18,7 @@ export class LibraryPage extends React.Component {
             db: null,
             data: {},     // search results formatted for a forest
             raw_data: {}, // search results
-            isDownloading: false,
         }
-    }
-
-    componentWillMount() {
-        console.log("creating database")
-
-        dbinit({ name: 'yue3.db' }, dbSchema).then(
-            (result) => {
-
-                console.log(JSON.stringify(result))
-                this.setState({db: result.db})
-            },
-            (error) => {
-                console.log("x error connecting to database")
-                console.log(JSON.stringify(error))
-                console.error(error)
-            }
-        );
     }
 
     search() {
@@ -175,7 +30,7 @@ export class LibraryPage extends React.Component {
 
     async _search() {
 
-        result = await this.state.db.execute("SELECT uid, artist, album, title, file_path, art_path, length from songs WHERE synced == 1 ORDER BY artist_key, album, title ASC", [])
+        result = await this.props.db.execute("SELECT uid, artist, album, title, file_path, art_path, length from songs WHERE synced == 1 ORDER BY artist_key, album, title ASC", [])
 
         data = {}
         raw_data = {}
@@ -255,7 +110,7 @@ export class LibraryPage extends React.Component {
 
     async _play() {
 
-        var result = await this.state.db.execute("SELECT uid, artist, album, title, file_path, art_path, length from songs WHERE synced == 1 LIMIT 1", [])
+        var result = await this.props.db.execute("SELECT uid, artist, album, title, file_path, art_path, length from songs WHERE synced == 1 LIMIT 1", [])
 
         if (result.rows.length < 0) {
             return
@@ -281,7 +136,7 @@ export class LibraryPage extends React.Component {
         TrackPlayer.addEventListener("playback-state", (state) => {console.log("on new state:" + state)})
         TrackPlayer.addEventListener("playback-queue-ended", (track, position) => {console.log("on queue end")})
         TrackPlayer.addEventListener("playback-error", (error, message) => {console.log("on error: " + message)})
-    */
+        */
         console.log(track)
 
         // Adds a track to the queue
@@ -297,7 +152,6 @@ export class LibraryPage extends React.Component {
 
         // Starts playing it
         TrackPlayer.play();
-
     }
 
     pause() {
@@ -308,10 +162,9 @@ export class LibraryPage extends React.Component {
     }
 
     async _pause() {
+
         TrackPlayer.pause();
-
     }
-
 
     expandToggle() {
         this.refs.forest.expandToggle().then(
@@ -327,7 +180,6 @@ export class LibraryPage extends React.Component {
         )
     }
 
-
     render() {
 
         return (
@@ -337,7 +189,7 @@ export class LibraryPage extends React.Component {
                 justifyContent: 'center',
                 height:'100%'
             }}>
-                {this.state.db===null?null:
+                {(!this.props.db)?<Text>error loading db</Text>:
                     <View style={{
                         flex:1,
                         flexDirection: 'row',
@@ -365,6 +217,7 @@ export class LibraryPage extends React.Component {
 }
 
 const mapStateToProps = state => ({
+    db: state.sqldb.db,
 });
 
 const bindActions = dispatch => ({

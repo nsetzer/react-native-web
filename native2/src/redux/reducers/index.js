@@ -6,6 +6,7 @@ import { combineReducers } from 'redux';
 
 import {routeReducer} from '../../common/components/Route';
 import {authReducer} from '../../common/components/Auth';
+import {sqldbReducer} from '../../db';
 
 
 // the name here is used as the top level key
@@ -16,6 +17,7 @@ import {authReducer} from '../../common/components/Auth';
 const reducers = {
     route: routeReducer,
     auth: authReducer,
+    sqldb: sqldbReducer,
 };
 
 export default combineReducers(reducers)

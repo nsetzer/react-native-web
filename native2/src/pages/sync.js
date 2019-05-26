@@ -4,7 +4,6 @@ import React from 'react';
 import { Text, View, TouchableOpacity, PermissionsAndroid } from "react-native";
 import { connect } from "react-redux";
 
-import { dbinit } from '../db';
 import { env, librarySearch, authenticate, downloadFile, dirs } from '../common/api';
 import ForestView from '../common/components/ForestView';
 
@@ -149,23 +148,6 @@ export class SyncPage extends React.Component {
         }
     }
 
-    componentWillMount() {
-        console.log("creating database")
-
-        dbinit({ name: 'yue3.db' }, dbSchema).then(
-            (result) => {
-
-                console.log(JSON.stringify(result))
-                this.setState({db: result.db})
-            },
-            (error) => {
-                console.log("x error connecting to database")
-                console.log(JSON.stringify(error))
-                console.error(error)
-            }
-        );
-    }
-
     insertRow() {
 
         this._insertRow().then(
@@ -193,9 +175,9 @@ export class SyncPage extends React.Component {
         }
 
         var result = null;
-        result = await this.state.db.t.songs.insert(song1);
+        result = await this.props.db.t.songs.insert(song1);
         var spk = result.insertId
-        //result = await this.state.db.t.songs.insert_bulk([song1, song2]);
+        //result = await this.props.db.t.songs.insert_bulk([song1, song2]);
         console.log(Object.keys(result))
         console.log(result)
         for (var i=0; i < result.rows.length; i++) {
@@ -203,10 +185,10 @@ export class SyncPage extends React.Component {
             console.log(item)
         }
 
-        result = await this.state.db.t.songs.count()
+        result = await this.props.db.t.songs.count()
         console.log(result)
 
-        result = await this.state.db.execute("SELECT * from songs", [])
+        result = await this.props.db.execute("SELECT * from songs", [])
         console.log(Object.keys(result))
         console.log(result)
         for (var i=0; i < result.rows.length; i++) {
@@ -214,7 +196,7 @@ export class SyncPage extends React.Component {
             console.log(item)
         }
 
-        result = await this.state.db.t.songs.update(spk, {artist: "256"});
+        result = await this.props.db.t.songs.update(spk, {artist: "256"});
         console.log(Object.keys(result))
         console.log(result)
         for (var i=0; i < result.rows.length; i++) {
@@ -222,7 +204,7 @@ export class SyncPage extends React.Component {
             console.log(item)
         }
 
-        result = await this.state.db.execute("SELECT * from songs", [])
+        result = await this.props.db.execute("SELECT * from songs", [])
         console.log(Object.keys(result))
         console.log(result)
         for (var i=0; i < result.rows.length; i++) {
@@ -230,7 +212,7 @@ export class SyncPage extends React.Component {
             console.log(item)
         }
 
-        result = await this.state.db.t.songs.upsert({uid: "123"}, {"title": 'upsert'})
+        result = await this.props.db.t.songs.upsert({uid: "123"}, {"title": 'upsert'})
         console.log(Object.keys(result))
         console.log(result)
         for (var i=0; i < result.rows.length; i++) {
@@ -238,7 +220,7 @@ export class SyncPage extends React.Component {
             console.log(item)
         }
 
-        result = await this.state.db.execute("SELECT * from songs", [])
+        result = await this.props.db.execute("SELECT * from songs", [])
         console.log(Object.keys(result))
         console.log(result)
         for (var i=0; i < result.rows.length; i++) {
@@ -263,10 +245,10 @@ export class SyncPage extends React.Component {
         for (var i=0; i < songs.length; i++) {
             var song = remoteSongToLocalSong(songs[i])
 
-            await this.state.db.t.songs.upsert({uid: song.uid}, song)
+            await this.props.db.t.songs.upsert({uid: song.uid}, song)
         }
 
-        var count = await this.state.db.t.songs.count()
+        var count = await this.props.db.t.songs.count()
         console.log(count)
 
         return
@@ -281,7 +263,7 @@ export class SyncPage extends React.Component {
 
     async _search() {
 
-        result = await this.state.db.execute("SELECT uid, artist, album, title, sync, synced from songs ORDER BY artist_key, album, title ASC", [])
+        result = await this.props.db.execute("SELECT uid, artist, album, title, sync, synced from songs ORDER BY artist_key, album, title ASC", [])
 
         data = {}
         raw_data = {}
@@ -394,7 +376,7 @@ export class SyncPage extends React.Component {
         for (var i=0; i < keys.length; i++) {
             key = keys[i]
 
-            await this.state.db.t.songs.update({uid: key}, {sync: update_items[key]})
+            await this.props.db.t.songs.update({uid: key}, {sync: update_items[key]})
 
         }
 
@@ -424,7 +406,7 @@ export class SyncPage extends React.Component {
             return
         }
 
-        result = await this.state.db.execute("SELECT uid, sync, synced, artist, album, title, album_index from songs WHERE sync == 1", [])
+        result = await this.props.db.execute("SELECT uid, sync, synced, artist, album, title, album_index from songs WHERE sync == 1", [])
 
         var file_name
 
@@ -440,7 +422,7 @@ export class SyncPage extends React.Component {
 
                 file_name = item.artist + "/" + item.album + "/" +
                     ((item.album_index!==null)?item.album_index + "_":'') +
-                    item.title + "." + item.uid.substring(0, 7) +".ogg"
+                    item.title + "." + item.uid.substring(0, 8) +".ogg"
                 file_name = file_name.replace(/\s/g, '_')
 
                 url = env.baseUrl + "/api/library/" + item.uid + "/audio"
@@ -449,7 +431,7 @@ export class SyncPage extends React.Component {
 
                 var f_obj = await this._doDownloadOne(url, params, headers)
 
-                await this.state.db.t.songs.update({uid: item.uid}, {
+                await this.props.db.t.songs.update({uid: item.uid}, {
                     synced: true,
                     file_path: params.location,
                 })
@@ -512,7 +494,7 @@ export class SyncPage extends React.Component {
 
     async _play() {
 
-        var result = await this.state.db.execute("SELECT uid, artist, album, title, file_path, art_path, length from songs WHERE synced == 1 LIMIT 1", [])
+        var result = await this.props.db.execute("SELECT uid, artist, album, title, file_path, art_path, length from songs WHERE synced == 1 LIMIT 1", [])
 
         if (result.rows.length < 0) {
             return
@@ -598,7 +580,7 @@ export class SyncPage extends React.Component {
                 justifyContent: 'center',
                 height:'100%'
             }}>
-                {this.state.db===null?null:
+                {!this.props.db?<Text>error loading db</Text>:
                     <View style={{
                         flex:1,
                         flexDirection: 'row',
@@ -632,7 +614,7 @@ export class SyncPage extends React.Component {
                     </View>
                 }
 
-                {this.state.db===null?null:
+                {!this.props.db?<Text>error loading db</Text>:
                     <View style={{
                         flex:1,
                         flexDirection: 'row',
@@ -656,6 +638,7 @@ export class SyncPage extends React.Component {
 }
 
 const mapStateToProps = state => ({
+    db: state.sqldb.db,
 });
 
 const bindActions = dispatch => ({
