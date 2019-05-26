@@ -29,7 +29,8 @@ export function sql_prepare_schema(schema) {
 
         var columns = tbl.columns.map(col => col.name + " " + col.type).join(', ');
 
-        statements.push({sql: "DROP TABLE IF EXISTS " + tbl.name, params: []});
+        //statements.push({sql: "DROP TABLE IF EXISTS " + tbl.name, params: []});
+
         statements.push({sql: table + "(" + columns + ")", params: []});
     }
     return statements;
@@ -115,13 +116,14 @@ export function sql_prepare_insert_bulk(table, coldef, values) {
 
 }
 
-export function sql_prepare_update(table, coldef, spk, value) {
+export function sql_prepare_update(table, coldef, spk_or_npk, value) {
 
     var params = []
     var columns = ""
     var template = ""
     for (var i=0; i < coldef.length; i++) {
 
+        // cannot update spk!
         if (coldef[i].name == 'spk') {
             continue;
         }
@@ -144,12 +146,21 @@ export function sql_prepare_update(table, coldef, spk, value) {
         }
     }
 
-    var clause = " WHERE (" + table + ".spk == ?)"
-    params.push(spk)
+    var clause;
+    if (typeof(spk_or_npk) === 'number') {
+        clause = table + ".spk == ?"
+        params.push(spk_or_npk)
+    } else if (typeof(spk_or_npk) === 'object') {
+        clause = Object.keys(spk_or_npk).map((key) => {
+            params.push(spk_or_npk[key])
+            return key + " == ?"
+        }).join(" && ")
+    } else {
+        throw "primary key is not a number (spk) or object (npk)!";
+    }
 
     var sql = "UPDATE " + table + " SET (" +
-        columns + ") = (" + template + ")" +
-        clause;
+        columns + ") = (" + template + ") WHERE (" + clause + ")";
 
     return {sql, params}
 
@@ -164,14 +175,13 @@ export function sql_prepare_upsert_select(table, coldef, npk) {
     var items = []
     var params = []
 
-    var keys = Object.keys(npk)
-    for (var i=0; i < keys.length; i++) {
-        items.push(keys[i] + " == ?")
-        params.push(npk[keys[i]])
-    }
+    var clause = Object.keys(npk).map((key) => {
+        params.push(npk[key])
+        return key + " == ?"
+    }).join(" && ")
 
     var sql = "SELECT * FROM " + table +
-        " WHERE (" + items.join(" && ") + ") LIMIT 1"
+        " WHERE (" + clause + ") LIMIT 1"
 
     return {sql, params}
 }
@@ -289,7 +299,7 @@ export async function dbconnect(opts) {
     connection.prepare.insert = (tbl_name, coldef, value) => sql_prepare_insert(tbl_name, coldef, value);
     connection.prepare.insert_bulk = (tbl_name, coldef, values) => sql_prepare_insert_bulk(tbl_name, coldef, values);
 
-    connection.prepare.update = (tbl_name, coldef, spk, value) => sql_prepare_update(tbl_name, coldef, spk, value);
+    connection.prepare.update = (tbl_name, coldef, spk_or_npk, value) => sql_prepare_update(tbl_name, coldef, spk_or_npk, value);
 
     connection.prepare.delete = (tbl_name, spk) => sql_prepare_delete(tbl_name, spk);
     connection.prepare.delete_bulk = (tbl_name, spks) => sql_prepare_delete_bulk(tbl_name, spks);
@@ -304,7 +314,7 @@ function _dbinit_table(db, tbl) {
     col.insert = async (value) => db.execute_single(db.prepare.insert(tbl.name, tbl.columns, value))
     col.insert_bulk = async (values) => db.execute_single(db.prepare.insert_bulk(tbl.name, tbl.columns, values))
 
-    col.update = async (spk, value) => db.execute_single(db.prepare.update(tbl.name, tbl.columns, spk, value))
+    col.update = async (spk_or_npk, value) => db.execute_single(db.prepare.update(tbl.name, tbl.columns, spk_or_npk, value))
 
     col.upsert = async (npk, value) => _upsert(db, tbl.name, tbl.columns, npk, value)
 

@@ -95,9 +95,9 @@ export function fsGetPath(root, path) {
     return axios.get(url, config);
 }
 
-export function librarySearch(query, limit=500, page=0) {
+export function librarySearch(query, limit=500, page=0, orderby='artist') {
 
-    const url = env.baseUrl + '/api/library' + serialize({query, limit, page})
+    const url = env.baseUrl + '/api/library' + serialize({query, limit, page, orderby})
     console.log(url)
     const config = authConfig();
     return axios.get(url, config);

@@ -80,6 +80,10 @@ class MainPage extends React.Component {
                 icon: {url: SvgStorage, style: icon_style}
             },
             {
+                text: 'File System',
+                icon: {url: SvgStorage, style: icon_style}
+            },
+            {
                 route: '/u/notes',
                 text: 'Notes',
                 icon: {url: SvgNotes, style: icon_style}

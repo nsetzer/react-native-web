@@ -1,13 +1,40 @@
 
 import React from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, ScrollView, FlatList, SectionList } from 'react-native';
+
+import CheckBox from './CheckBox'
+
+// todo selection mode CHECK or HIGHLIGHT
+
+// TODO: version 2 render a single flat list
+//       convert all data into a singular Object
+//       {depth: <>, title: <>, item: <>, uid: <>, children: <>}
+//       item only renders if expand is true
+//       recursion is not required
+//       children is a list of indices into the data of the children
+//       children will always be an index greater than parents
+//       non leaf items will have a null item
+//       consider using section ist over flat list
+//       https://facebook.github.io/react-native/docs/sectionlist
 
 const boxWidth = 15;
+
+const styles = StyleSheet.create({
+    footer: {
+        height: 100,
+        width: '100%',
+    },
+});
+
+class ForestFooter extends React.PureComponent {
+  render() {
+    return (<View style={styles.footer}></View>)
+  }
+}
 
 export class TreeLeaf extends React.Component {
 
     selectChild(key, state=null) {
-        console.log("select leaf: " + key)
         this.props.selectChild(key)
     }
 
@@ -20,16 +47,22 @@ export class TreeLeaf extends React.Component {
 
         return (
             <View style={{flex:1, flexDirection: 'row', alignItems: 'center', paddingTop: 5}}>
-                <TouchableOpacity onPress={()=>{this.selectChild(nodeKey)}}
-                    style={{paddingRight: 5}}>
-                    <View style={{width: boxWidth, height: boxWidth, backgroundColor:'blue'}}></View>
-                </TouchableOpacity>
 
-                <Text style={{backgroundColor: bgcolor, flexGrow: 1}}>{this.props.data.title}</Text>
+                <View style={{width: boxWidth, height: boxWidth, backgroundColor:'blue', paddingRight: 5, }}></View>
+
+                <CheckBox
+                    style={{paddingRight: 5}}
+                    onClick={()=>{this.selectChild(nodeKey)}}
+                    isChecked={isSelected}
+                />
+
+                <TouchableOpacity onPress={()=>{this.selectChild(nodeKey)}}
+                    style={{flexGrow: 1}}>
+                <Text style={{backgroundColor: bgcolor, }}>{this.props.data.title}</Text>
+                </TouchableOpacity>
             </View>
         )
     }
-
 }
 
 export class TreeSubCard extends React.Component {
@@ -42,7 +75,6 @@ export class TreeSubCard extends React.Component {
         var nextState = {}
         var selected = (state===null)?(!this.props.isSelected(key)):state;
         nextState[key] = selected
-        console.log("leaf:" + selected + ':'+  JSON.stringify(nextState))
         this.fixSelection(nextState)
     }
 
@@ -51,7 +83,6 @@ export class TreeSubCard extends React.Component {
         var selected = !this.props.isSelected(key)
         nextState[key] = selected
         this._selectParent(nextState, selected, key, this.props.data)
-        console.log("+++" + selected + '::' + JSON.stringify(Object.keys(nextState)))
         this.fixSelection(nextState)
     }
 
@@ -83,7 +114,6 @@ export class TreeSubCard extends React.Component {
             }
         }
         nextState[nodeKey] = selected
-        console.log("sub:" + selected+ ':'+  JSON.stringify(nextState))
 
         this.props.selectFix(nextState)
     }
@@ -101,12 +131,18 @@ export class TreeSubCard extends React.Component {
             <View style={{paddingTop: 5}}>
 
             <View style={{flex:1, flexDirection: 'row', alignItems: 'center'}}>
-                <TouchableOpacity onPress={()=>{this.selectParent(nodeKey)}}
+                <TouchableOpacity onPress={()=>{this.props.expandChild(nodeKey)}}
                     style={{paddingRight: 5}}>
                     <View style={{width: boxWidth, height: boxWidth,backgroundColor:'blue'}}></View>
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={()=>{this.props.expandChild(nodeKey)}}
+                <CheckBox
+                    style={{paddingRight: 5}}
+                    onClick={()=>{this.selectParent(nodeKey)}}
+                    isChecked={isSelected}
+                />
+
+                <TouchableOpacity onPress={()=>{this.selectParent(nodeKey)}}
                     style={{backgroundColor: bgcolor,flexGrow: 1}}>
                     <Text >{this.props.title}</Text>
                 </TouchableOpacity>
@@ -143,7 +179,6 @@ export class TreeCard extends React.Component {
         var selected = !this.props.isSelected(key)
         nextState[key] = selected
         this._selectParent(nextState, selected, key, this.props.data)
-        console.log("+++" + selected + '::' + JSON.stringify(Object.keys(nextState)))
         this.fixSelection(nextState)
     }
 
@@ -200,12 +235,18 @@ export class TreeCard extends React.Component {
             <View style={{padding: 5, marginLeft: 0}}>
 
             <View style={{flex:1, flexDirection: 'row', alignItems: 'center'}}>
-                <TouchableOpacity onPress={()=>{this.selectParent(nodeKey)}}
+                <TouchableOpacity onPress={()=>{this.props.expandChild(nodeKey)}}
                     style={{paddingRight: 5}}>
-                    <View style={{width: boxWidth, height: boxWidth,backgroundColor:'blue'}}></View>
+                    <View style={{width: boxWidth, height: boxWidth, backgroundColor:'blue'}}></View>
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={()=>{this.props.expandChild(nodeKey)}}
+                <CheckBox
+                    style={{paddingRight: 5}}
+                    onClick={()=>{this.selectParent(nodeKey)}}
+                    isChecked={isSelected}
+                />
+
+                <TouchableOpacity onPress={()=>{this.selectParent(nodeKey)}}
                     style={{flexGrow: 1}}>
                     <Text style={{backgroundColor: bgcolor}}>{this.props.title}</Text>
                 </TouchableOpacity>
@@ -244,7 +285,7 @@ export default class ForestView extends React.Component {
         }
     }
 
-    expandChild(key, state=null) {
+    _expandChild(key, state=null) {
         // toggle by default
         // if second argument is given and not null expand or not
         const expansion = {...this.state.expansion}
@@ -252,58 +293,127 @@ export default class ForestView extends React.Component {
         this.setState({expansion})
     }
 
-    isExpanded(key) {
-
+    _isExpanded(key) {
         return !!this.state.expansion[key]
     }
 
-    selectChild(key, state=null) {
+    _selectChild(key, state=null) {
         // toggle by default
         // if second argument is given and not null expand or not
         const selected = {...this.state.selected}
         selected[key] = (state===null)?!this.state.selected[key]:state;
-        console.log("set selected: " + key + ": " + (selected[key]))
-        console.log(JSON.stringify(selected))
         this.setState({selected})
     }
 
-    fixSelection(nextState) {
+    _fixSelection(nextState) {
         const selected = {...this.state.selected, ...nextState}
-        console.log("root:" + JSON.stringify(selected))
         this.setState({selected})
     }
 
-    isSelected(key) {
+    _isSelected(key) {
         //257AFD / Selected Blue
         return !!this.state.selected[key]
     }
 
+    _setAllTrue(data, parentKey, attr) {
+        if (Array.isArray(data)) {
+            data.map((key, index) => {
+                var k = parentKey + '_' + index.toString()
+                attr[k] = true
+            })
+        } else {
+            Object.keys(data).map((key, index) => {
+                var k = parentKey + '_' + index.toString()
+                attr[k] = true
+                this._setAllTrue(data[key], k, attr)
+            })
+        }
+    }
+
+    // return all leaves that have their attr set to true
+    _getAllTrue(data, parentKey, attr, result) {
+        if (Array.isArray(data)) {
+            data.map((leaf, index) => {
+                var k = parentKey + '_' + index.toString()
+                if (attr[k]) {
+                    result.push(leaf)
+                }
+            })
+        } else {
+            // TODO: do the keys need to be .sort()
+            // some keys use a different value for sorting than
+            // are used for display. ES2015 guarantees insert order
+            // is preserved
+            Object.keys(data).map((key, index) => {
+                var k = parentKey + '_' + index.toString()
+                this._getAllTrue(data[key], k, attr, result)
+            })
+        }
+    }
+
+    async expandAll(bExpand) {
+        const expansion = {}
+        if (bExpand) {
+            this._setAllTrue(this.props.data, 'n', expansion)
+        }
+        this.setState({expansion})
+    }
+
+    async expandToggle() {
+        await this.expandAll(Object.keys(this.state.expansion).length == 0)
+    }
+
+    async selectAll(bSelect) {
+        const selected = {}
+        if (bSelect) {
+            this._setAllTrue(this.props.data, 'n', selected)
+        }
+        this.setState({selected})
+    }
+
+    async selectToggle() {
+        await this.selectAll(Object.keys(this.state.selected).length == 0)
+    }
+
+    async getSelection() {
+
+        const selected = []
+        this._getAllTrue(this.props.data, 'n', this.state.selected, selected)
+        return selected
+    }
+
+    async setSelection(keys) {
+        // TODO: requires itemKeyExtractor for leaf elements
+        // TODO: requires fix selection for all tree roots
+    }
+
+    itemKeyExtractor = (key, index) => 'n_' + index.toString();
+
+    itemRenderItem = ({item, index}) => (
+        <TreeCard
+            key={'n_' + index.toString()}
+            title={item}
+            expandChild={this._expandChild.bind(this)}
+            isExpanded={this._isExpanded.bind(this)}
+            selectChild={this._selectChild.bind(this)}
+            selectFix={this._fixSelection.bind(this)}
+            isSelected={this._isSelected.bind(this)}
+            data={this.props.data[item]}>
+        </TreeCard>
+    );
+
     render() {
 
         return (
-            <View>
+            <View style={{width: '100%'}}>
 
-            <TouchableOpacity onPress={()=>{this.onPress()}}>
-                <Text>{env.baseUrl}</Text>
-            </TouchableOpacity>
-
-            {this.props.data?
-                Object.keys(this.props.data).map((key, index) => {
-                    return (<TreeCard
-                            key={'n_' + index.toString()}
-                            expandChild={this.expandChild.bind(this)}
-                            isExpanded={this.isExpanded.bind(this)}
-                            selectChild={this.selectChild.bind(this)}
-                            selectFix={this.fixSelection.bind(this)}
-                            isSelected={this.isSelected.bind(this)}
-                            title={key}
-                            data={this.props.data[key]}>
-                        </TreeCard>
-                    )
-            }):<Text>error</Text>}
-
-            <View style={{width: '100%', height: 100}}>
-            </View>
+            <FlatList
+                data={Object.keys(this.props.data)}
+                extraData={this.state}
+                keyExtractor={this.itemKeyExtractor}
+                renderItem={this.itemRenderItem.bind(this)}
+                ListFooterComponent={ForestFooter}
+                />
 
             </View>
         )
