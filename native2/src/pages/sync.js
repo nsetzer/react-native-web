@@ -136,7 +136,7 @@ const dbSchema = [
 ]
 
 
-export class LibraryPage extends React.Component {
+export class SyncPage extends React.Component {
 
     constructor(props) {
         super(props);
@@ -166,6 +166,112 @@ export class LibraryPage extends React.Component {
         );
     }
 
+    insertRow() {
+
+        this._insertRow().then(
+            (result) => {console.log(result)},
+            (error) => {console.error(error)}
+        )
+
+    }
+
+    async _insertRow() {
+
+        var song1 = {
+            uid: "123",
+            artist: "123",
+            title: "123",
+            album: "123",
+            user_id: "000"
+        }
+        var song2 = {
+            uid: "124",
+            artist: "123",
+            title: "123",
+            album: "123",
+            user_id: "000"
+        }
+
+        var result = null;
+        result = await this.state.db.t.songs.insert(song1);
+        var spk = result.insertId
+        //result = await this.state.db.t.songs.insert_bulk([song1, song2]);
+        console.log(Object.keys(result))
+        console.log(result)
+        for (var i=0; i < result.rows.length; i++) {
+            var item = result.rows.item(i);
+            console.log(item)
+        }
+
+        result = await this.state.db.t.songs.count()
+        console.log(result)
+
+        result = await this.state.db.execute("SELECT * from songs", [])
+        console.log(Object.keys(result))
+        console.log(result)
+        for (var i=0; i < result.rows.length; i++) {
+            var item = result.rows.item(i);
+            console.log(item)
+        }
+
+        result = await this.state.db.t.songs.update(spk, {artist: "256"});
+        console.log(Object.keys(result))
+        console.log(result)
+        for (var i=0; i < result.rows.length; i++) {
+            var item = result.rows.item(i);
+            console.log(item)
+        }
+
+        result = await this.state.db.execute("SELECT * from songs", [])
+        console.log(Object.keys(result))
+        console.log(result)
+        for (var i=0; i < result.rows.length; i++) {
+            var item = result.rows.item(i);
+            console.log(item)
+        }
+
+        result = await this.state.db.t.songs.upsert({uid: "123"}, {"title": 'upsert'})
+        console.log(Object.keys(result))
+        console.log(result)
+        for (var i=0; i < result.rows.length; i++) {
+            var item = result.rows.item(i);
+            console.log(item)
+        }
+
+        result = await this.state.db.execute("SELECT * from songs", [])
+        console.log(Object.keys(result))
+        console.log(result)
+        for (var i=0; i < result.rows.length; i++) {
+            var item = result.rows.item(i);
+            console.log(item)
+        }
+
+    }
+
+    fetchData() {
+        this._fetchData().then(
+            (result) => {console.log("fetch complete")},
+            (error) => {console.error(error)}
+        )
+    }
+
+    async _fetchData() {
+
+        var response = await librarySearch("", 300, 0, 'forest')
+        var songs = response.data.result
+
+        for (var i=0; i < songs.length; i++) {
+            var song = remoteSongToLocalSong(songs[i])
+
+            await this.state.db.t.songs.upsert({uid: song.uid}, song)
+        }
+
+        var count = await this.state.db.t.songs.count()
+        console.log(count)
+
+        return
+    }
+
     search() {
         this._search().then(
             (result) => {console.log("search complete")},
@@ -175,7 +281,7 @@ export class LibraryPage extends React.Component {
 
     async _search() {
 
-        result = await this.state.db.execute("SELECT uid, artist, album, title, file_path, art_path, length from songs WHERE synced == 1 ORDER BY artist_key, album, title ASC", [])
+        result = await this.state.db.execute("SELECT uid, artist, album, title, sync, synced from songs ORDER BY artist_key, album, title ASC", [])
 
         data = {}
         raw_data = {}
@@ -244,6 +350,157 @@ export class LibraryPage extends React.Component {
         */
 
         this.setState({data, raw_data})
+    }
+
+    startSync() {
+        this._doSync().then(
+            (result) => {console.log("sync complete")},
+            (error) => {console.error(error)}
+        )
+    }
+
+    async _doSync() {
+
+        var selected = await this.refs.forest.getSelection()
+
+        var items = {...this.state.raw_data}
+
+        var update_items = {}
+
+        selected.map((item) => {
+            delete items[item.uid];
+
+            if (!item.sync) {
+                update_items[item.uid] = true
+                item.sync = true
+            }
+        })
+
+        var keys = Object.keys(items)
+
+        Object.keys(items).map((key) => {
+            var item = items[key]
+
+            if (!!item.sync) {
+                update_items[item.uid] = false
+                item.sync = false
+            }
+        })
+
+        console.log(update_items)
+
+        var key;
+        var keys = Object.keys(update_items)
+        for (var i=0; i < keys.length; i++) {
+            key = keys[i]
+
+            await this.state.db.t.songs.update({uid: key}, {sync: update_items[key]})
+
+        }
+
+
+    }
+
+
+    startDownload() {
+
+        if (!this.state.isDownloading) {
+            this.setState({isDownloading: true})
+            this._doDownload().then(
+                (result) => {
+                    console.log("download complete")
+                    this.setState({isDownloading: false})
+                },
+                (error) => {this.setState({isDownloading: false}); console.log(error)}
+            )
+        }
+    }
+
+
+    async _doDownload() {
+
+        var cont = await this.requestStoragePermission()
+        if (!cont) {
+            return
+        }
+
+        result = await this.state.db.execute("SELECT uid, sync, synced, artist, album, title, album_index from songs WHERE sync == 1", [])
+
+        var file_name
+
+        const response = await authenticate("admin", "admin")
+
+        var token = response.data.token
+        console.log(token)
+
+        for (var i=0; i < result.rows.length; i++) {
+            var item = result.rows.item(i);
+
+            if (item.sync && item.sync != item.synced) {
+
+                file_name = item.artist + "/" + item.album + "/" +
+                    ((item.album_index!==null)?item.album_index + "_":'') +
+                    item.title + "." + item.uid.substring(0, 7) +".ogg"
+                file_name = file_name.replace(/\s/g, '_')
+
+                url = env.baseUrl + "/api/library/" + item.uid + "/audio"
+                headers = {'Authorization': token}
+                params = {location:  dirs.MusicDir + "/yue/" + file_name}
+
+                var f_obj = await this._doDownloadOne(url, params, headers)
+
+                await this.state.db.t.songs.update({uid: item.uid}, {
+                    synced: true,
+                    file_path: params.location,
+                })
+
+            }
+
+        }
+
+    }
+
+    async requestStoragePermission() {
+        try {
+            /*
+            const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+                {
+                title: 'Cool Photo App Camera Permission',
+                message:
+                    'Cool Photo App needs access to your camera ' +
+                    'so you can take awesome pictures.',
+                buttonNeutral: 'Ask Me Later',
+                buttonNegative: 'Cancel',
+                buttonPositive: 'OK',
+                },
+            );
+            */
+            const result = await PermissionsAndroid.requestMultiple([
+                PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+                PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE])
+            console.log(result)
+
+            const granted = result[PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE]
+
+            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                console.log('You can use the camera');
+                return true;
+            } else {
+                console.log('Camera permission denied');
+                return false;
+            }
+        } catch (err) {
+            console.warn(err);
+        }
+    }
+
+
+    async _doDownloadOne(url, params, headers) {
+        return await new Promise((resolve, reject) => {
+            downloadFile(url, headers, params,
+                resolve, reject, (progress) => {console.log(progress)})
+        })
     }
 
     play() {
@@ -330,6 +587,10 @@ export class LibraryPage extends React.Component {
 
     render() {
 
+                    //<TouchableOpacity onPress={() => {this.insertRow()}}>
+                    //    <Text style={{padding: 5}}>Insert</Text>
+                    //</TouchableOpacity>
+
         return (
             <View style={{
                 flex:1,
@@ -343,9 +604,39 @@ export class LibraryPage extends React.Component {
                         flexDirection: 'row',
                     }}>
 
+                    <TouchableOpacity onPress={() => {this.fetchData()}}>
+                        <Text style={{padding: 5}}>Fetch</Text>
+                    </TouchableOpacity>
+
+
                     <TouchableOpacity onPress={() => {this.search()}}>
                         <Text style={{padding: 5}}>Search</Text>
                     </TouchableOpacity>
+
+                    <TouchableOpacity onPress={() => {this.expandToggle()}}>
+                        <Text style={{padding: 5}}>Expand All</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity onPress={() => {this.selectToggle()}}>
+                        <Text style={{padding: 5}}>Select All</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity onPress={() => {this.startSync()}}>
+                        <Text style={{padding: 5}}>Sync</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity onPress={() => {this.startDownload()}}>
+                        <Text style={{padding: 5}}>Download</Text>
+                    </TouchableOpacity>
+
+                    </View>
+                }
+
+                {this.state.db===null?null:
+                    <View style={{
+                        flex:1,
+                        flexDirection: 'row',
+                    }}>
 
                     <TouchableOpacity onPress={() => {this.play()}}>
                         <Text style={{padding: 5}}>play</Text>
@@ -370,4 +661,4 @@ const mapStateToProps = state => ({
 const bindActions = dispatch => ({
 });
 
-export default connect(mapStateToProps, bindActions)(LibraryPage);
+export default connect(mapStateToProps, bindActions)(SyncPage);

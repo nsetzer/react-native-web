@@ -3,6 +3,7 @@ package com.native2;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
+import com.guichaguri.trackplayer.TrackPlayer;
 import com.RNFetchBlob.RNFetchBlobPackage;
 import com.meedan.ShareMenuPackage;
 import com.facebook.react.ReactNativeHost;
@@ -29,6 +30,7 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
+          new TrackPlayer(),
           new RNFetchBlobPackage(),
           new ShareMenuPackage(),
           new SvgPackage(),

@@ -16,6 +16,7 @@ import {
 } from '../common/components/svg'
 
 import LibraryPage from './library'
+import SyncPage from './sync'
 import NotesPage from './notes'
 import NowPlayingPage from './nowplaying'
 import StoragePage from './storage'
@@ -75,6 +76,11 @@ class MainPage extends React.Component {
                 icon: {url: SvgLibrary, style: icon_style}
             },
             {
+                route: '/u/sync',
+                text: 'Sync',
+                icon: {url: SvgLibrary, style: icon_style}
+            },
+            {
                 route: '/u/storage',
                 text: 'Storage',
                 icon: {url: SvgStorage, style: icon_style}
@@ -129,6 +135,7 @@ class MainPage extends React.Component {
                         <Switch redirect='/u/nowplaying'>
                             <Route name='main-switch' path='/u/nowplaying'><NowPlayingPage/></Route>
                             <Route name='main-switch' path='/u/queue'     ><QueuePage     /></Route>
+                            <Route name='main-switch' path='/u/sync'      ><SyncPage      /></Route>
                             <Route name='main-switch' path='/u/library'   ><LibraryPage   /></Route>
                             <Route name='main-switch' path='/u/storage'   ><StoragePage   /></Route>
                             <Route name='main-switch' path='/u/notes'     ><NotesPage     /></Route>
