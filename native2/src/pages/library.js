@@ -1,11 +1,11 @@
 
 
 import React from 'react';
-import { Text, View, TouchableOpacity } from "react-native";
+import { Text, View, TouchableOpacity, PermissionsAndroid } from "react-native";
 import { connect } from "react-redux";
 
 import { dbinit } from '../db';
-import { librarySearch } from '../common/api';
+import { env, librarySearch, authenticate, downloadFile, dirs } from '../common/api';
 import ForestView from '../common/components/ForestView';
 
 function hashString(s) {
@@ -406,24 +406,100 @@ export class LibraryPage extends React.Component {
             this.setState({isDownloading: true})
             this._doDownload().then(
                 (result) => {
-                    console.log("sync complete")
+                    console.log("download complete")
                     this.setState({isDownloading: false})
                 },
-                (error) => {this.setState({isDownloading: false})}
+                (error) => {this.setState({isDownloading: false}); console.log(error)}
             )
         }
     }
 
 
     async _doDownload() {
-        result = await this.state.db.execute("SELECT uid, sync, synced from songs WHERE sync == 1", [])
+
+        var cont = await this.requestStoragePermission()
+        if (!cont) {
+            return
+        }
+
+        result = await this.state.db.execute("SELECT uid, sync, synced, artist, album, title, album_index from songs WHERE sync == 1", [])
+
+        var file_name
+
+        console.log("logging in")
+        const response = await authenticate("admin", "admin")
+
+        var token = response.data.token
+        console.log(token)
 
         for (var i=0; i < result.rows.length; i++) {
             var item = result.rows.item(i);
 
-            console.log(item)
+            if (item.sync != item.synced) {
+
+                file_name = item.artist + "/" + item.album + "/" +
+                    ((item.album_index!==null)?item.album_index + "_":'') +
+                    item.title + ".ogg"
+                file_name = file_name.replace(/\s/g, '_')
+
+                url = env.baseUrl + "/api/library/" + item.uid + "/audio?mode=mp3"
+                headers = {'Authorization': token}
+                //params = {location:  dirs.MusicDir + "/test1.ogg"}
+                params = {location:  dirs.MusicDir + "/yue/" + file_name}
+                //
+                //downloadFile(url, headers, )
+
+                var result = await this._doDownloadOne(url, params, headers)
+
+                await this.state.db.t.songs.update({uid: key}, {sync: update_items[key]})
+
+            }
 
         }
+
+    }
+
+    async requestStoragePermission() {
+        try {
+            /*
+            const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+                {
+                title: 'Cool Photo App Camera Permission',
+                message:
+                    'Cool Photo App needs access to your camera ' +
+                    'so you can take awesome pictures.',
+                buttonNeutral: 'Ask Me Later',
+                buttonNegative: 'Cancel',
+                buttonPositive: 'OK',
+                },
+            );
+            */
+            const result = await PermissionsAndroid.requestMultiple([
+                PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+                PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE])
+            console.log(result)
+
+            const granted = result[PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE]
+
+            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                console.log('You can use the camera');
+                return true;
+            } else {
+                console.log('Camera permission denied');
+                return false;
+            }
+        } catch (err) {
+            console.warn(err);
+        }
+    }
+
+
+    async _doDownloadOne(url, params, headers) {
+        return await new Promise((resolve, reject) => {
+            downloadFile(url, headers, params,
+                resolve, reject, (progress) => {console.log(progress)})
+        })
     }
 
     expandToggle() {
@@ -439,6 +515,7 @@ export class LibraryPage extends React.Component {
             (error) => {console.error(error)}
         )
     }
+
 
     render() {
 

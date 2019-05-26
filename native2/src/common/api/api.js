@@ -52,6 +52,7 @@ export function getPeople() {
 }
 
 export function authenticate(email, password) {
+    console.log(env.baseUrl + '/api/user/login')
     return axios.post(env.baseUrl + '/api/user/login', {
             email: email,
             password: password,
