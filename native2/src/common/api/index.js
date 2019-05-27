@@ -8,6 +8,7 @@ const api = mock_api?require('./api_mock'):require('./api');
 export const env = api.env
 
 export const setAxiosConfig = api.setAxiosConfig
+export const authConfig = api.authConfig
 
 export const authenticate = api.authenticate
 export const validate_token = api.validate_token

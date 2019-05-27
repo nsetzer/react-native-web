@@ -30,7 +30,7 @@ export class LibraryPage extends React.Component {
 
     async _search() {
 
-        result = await this.props.db.execute("SELECT uid, artist, album, title, file_path, art_path, length from songs WHERE synced == 1 ORDER BY artist_key, album, title ASC", [])
+        result = await this.props.db.execute("SELECT uid, artist, album, title, file_path, art_path, length FROM songs WHERE synced == 1 ORDER BY artist_key, album, title ASC", [])
 
         data = {}
         raw_data = {}
@@ -50,8 +50,6 @@ export class LibraryPage extends React.Component {
             data[item.artist][item.album].push(item)
 
         }
-
-
 
         /*
         data = []

@@ -336,7 +336,6 @@ export async function execute_batch(db, statements) {
 
     var st = statements.map((item) => [item.sql, item.params])
 
-    // console.log("executing batch of " + statements.length)
     return await new Promise((resolve, reject) => {
         db.sqlBatch(st,
             () => {
@@ -382,7 +381,6 @@ export async function dbconnect(opts) {
     connection.transaction = async () => {return transaction(connection.db);}
     connection.execute = async (sql, params) => {return execute(connection.db, sql, params);}
     connection.execute_single = async (statement) => {return execute(connection.db, statement.sql, statement.params);}
-    connection.execute_many = async (statements) => {return execute_many(connection.db, statements);}
     connection.execute_batch = async (statements) => {return execute_batch(connection.db, statements);}
 
     connection.prepare = new Object();
@@ -431,7 +429,7 @@ export async function dbinit(opts, schema) {
 
         var statements = db.prepare.schema(schema)
 
-        await db.execute_many(statements)
+        await db.execute_batch(statements)
 
         db.tables = new Object();
         db.t = db.tables

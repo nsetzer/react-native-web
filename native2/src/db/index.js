@@ -25,6 +25,7 @@ export const dbSchema = [
             {name: "uid",        type: "VARCHAR UNIQUE", index: true},
             {name: "user_id",    type: "VARCHAR NOT NULL", },
 
+            {name: "valid",      type: "INTEGER DEFAULT 0", }, // if 0, resource marked for deletion
             {name: "sync",       type: "INTEGER DEFAULT 0", }, // download this resource
             {name: "synced",     type: "INTEGER DEFAULT 0", }, // resource has been downloaded
 

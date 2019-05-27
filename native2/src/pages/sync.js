@@ -4,7 +4,7 @@ import React from 'react';
 import { Text, View, TouchableOpacity, PermissionsAndroid } from "react-native";
 import { connect } from "react-redux";
 
-import { env, librarySearch, authenticate, downloadFile, dirs } from '../common/api';
+import { env, librarySearch, authenticate, downloadFile, dirs, authConfig } from '../common/api';
 import { setConfig } from '../config';
 import ForestView from '../common/components/ForestView';
 
@@ -76,6 +76,7 @@ function remoteSongToLocalSong(song) {
 
         date_added: song.date_added,
         last_played: song.last_played,
+        valid: 1
     }
 }
 
@@ -147,6 +148,11 @@ export class SyncPage extends React.Component {
             raw_data: {}, // search results
             defaultSelected: {},
             isDownloading: false,
+            progress: null,
+            dlsongs: null,
+            dlindex: 0,
+            dlcount: 0,
+            dlalive: true,
         }
     }
 
@@ -318,12 +324,22 @@ export class SyncPage extends React.Component {
         var fetch_size = 2700 // TODO: invesitgate increasing size
         var batch_size = 900
 
-        var t0, t1, t2
+        var t0, t1, t2, ts, te
         var response, songs
         var i,j,l
         var params, exists, result
         var spk, statements
 
+        result = await this.props.db.execute("UPDATE songs SET valid = 0", [])
+
+        result = await this.props.db.execute("SELECT spk, uid FROM songs", [])
+        exists = {}
+        for (var j=0; j < result.rows.length; j++) {
+            var item = result.rows.item(j);
+            exists[item.uid] = item.spk
+        }
+
+        ts = timeit();
         for (var page=0; page < 60; page++) {
 
             t0 = timeit();
@@ -346,12 +362,6 @@ export class SyncPage extends React.Component {
                     params.push(songs[j].uid)
                 }
 
-                result = await this.props.db.t.songs.exists_batch({uid: params})
-                exists = {}
-                for (var j=0; j < result.rows.length; j++) {
-                    var item = result.rows.item(j);
-                    exists[item.uid] = item.spk
-                }
                 statements = []
                 for (j=i; j < i + batch_size && j < l; j++) {
                     spk = exists[songs[j].uid]
@@ -372,6 +382,8 @@ export class SyncPage extends React.Component {
                         " request: " + (t1 - t0) +
                         " insert: " + (t2 - t1))
         }
+        te = timeit();
+        console.log("total time: " + (te - ts))
         return
     }
 
@@ -508,59 +520,21 @@ export class SyncPage extends React.Component {
         }
     }
 
+    // Note: downloading songs is broken into multiple phases
+    // the end of each phase calls setState, using the callback
+    // to delay the start of the next phase until the state is updated.
+    // each phase is separated by when the state needs to be updated
+
     startDownload() {
 
         if (!this.state.isDownloading) {
-            this.setState({isDownloading: true})
-            this._doDownload().then(
-                (result) => {
-                    console.log("download complete")
-                    this.setState({isDownloading: false})
-                },
-                (error) => {this.setState({isDownloading: false}); console.log(error)}
-            )
-        }
-    }
+            this.setState({isDownloading: true, dlalive: true}, () => {
 
-    async _doDownload() {
-
-        var cont = await this.requestStoragePermission()
-        if (!cont) {
-            return
-        }
-
-        result = await this.props.db.execute("SELECT uid, sync, synced, artist, album, title, album_index from songs WHERE sync == 1", [])
-
-        var file_name
-
-        const response = await authenticate("admin", "admin")
-
-        var token = response.data.token
-        console.log(token)
-
-        for (var i=0; i < result.rows.length; i++) {
-            var item = result.rows.item(i);
-
-            if (item.sync && item.sync != item.synced) {
-
-                file_name = item.artist + "/" + item.album + "/" +
-                    ((item.album_index!==null)?item.album_index + "_":'') +
-                    item.title + "." + item.uid.substring(0, 8) +".ogg"
-                file_name = file_name.replace(/\s/g, '_')
-
-                url = env.baseUrl + "/api/library/" + item.uid + "/audio"
-                headers = {'Authorization': token}
-                params = {location:  dirs.MusicDir + "/yue/" + file_name}
-
-                var f_obj = await this._doDownloadOne(url, params, headers)
-
-                await this.props.db.t.songs.update({uid: item.uid}, {
-                    synced: true,
-                    file_path: params.location,
-                })
-
-            }
-
+                this._doDownloadInit().then(
+                    (result) => {},
+                    (error) => {this.setState({isDownloading: false}); console.log(error)}
+                )
+            })
         }
     }
 
@@ -588,10 +562,8 @@ export class SyncPage extends React.Component {
             const granted = result[PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE]
 
             if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-                console.log('You can use the camera');
                 return true;
             } else {
-                console.log('Camera permission denied');
                 return false;
             }
         } catch (err) {
@@ -599,10 +571,110 @@ export class SyncPage extends React.Component {
         }
     }
 
+    async _doDownloadInit() {
+
+        var cont = await this.requestStoragePermission()
+        if (!cont) {
+            return
+        }
+
+        // TODO: auth parameters should come from redux store...
+        setConfig()
+        var cfg = authConfig()
+        const response = await authenticate(cfg.auth.username, cfg.auth.password)
+        var token = response.data.token
+
+        result = await this.props.db.execute("SELECT uid, sync, synced, artist, album, title, album_index from songs WHERE sync == 1 LIMIT 5", [])
+
+        var filename
+        var dlsongs = []
+        for (var i=0; i < result.rows.length; i++) {
+            var item = result.rows.item(i);
+
+            if (item.sync && item.sync != item.synced) {
+
+                    file_name = ((item.album_index!==null)?item.album_index + "_":'') +
+                        item.title + "." + item.uid.substring(0, 8) +".ogg"
+
+                    file_name = file_name.replace(/\s/g, '_')
+                    file_name = file_name.replace(/[\?\'\"\\\/\[\]\(\)]/g, '')
+                    file_name = item.artist + "/" + item.album + "/" + file_name
+
+                    url = env.baseUrl + "/api/library/" + item.uid + "/audio"
+                    headers = {'Authorization': token}
+                    params = {location:  dirs.MusicDir + "/yue/" + file_name}
+
+                    dlsongs.push({
+                        url, headers, params, metadata: item
+                    })
+            }
+
+        }
+
+        console.log("download: starting main sequence")
+        if (dlsongs.length > 0) {
+            this.setState({dlsongs, dlindex:0, dlcount: dlsongs.length}, () => {
+                this._doDownloadMain().then(
+                        (result) => {},
+                        (error) => {console.log(error)}
+                    )
+            })
+        } else {
+            this.setState({isDownloading: false})
+            console.log("download complete")
+        }
+    }
+
+    async _doDownloadMain() {
+
+        if (!this.state.dlalive) {
+            console.log("download terminate")
+            this.setState({isDownloading: false})
+            return
+        }
+
+        var {dlsongs, dlindex} = this.state
+
+        var song = dlsongs[dlindex]
+
+        try {
+            var f_obj = await this._doDownloadOne(song.url, song.params, song.headers)
+
+            var length = f_obj.info().headers['Content-Length']
+
+            await this.props.db.t.songs.update({uid: song.metadata.uid}, {
+                synced: true,
+                file_path: params.location,
+                file_size: (length>0)?length:null,
+            })
+
+        } catch (error) {
+            console.log("failed to download: ")
+            console.log(song)
+            console.log("HERE COMES THE ERROR")
+            console.log(error)
+        }
+
+        dlindex+=1
+        if (dlindex < dlsongs.length) {
+            this.setState({dlindex}, () => {
+                this._doDownloadMain().then(
+                        (result) => {console.log("download song complete")},
+                        (error) => {console.log(error)}
+                    )
+            })
+        } else {
+            this.setState({isDownloading: false})
+            console.log("download complete")
+        }
+    }
+
     async _doDownloadOne(url, params, headers) {
         return await new Promise((resolve, reject) => {
             downloadFile(url, headers, params,
-                resolve, reject, (progress) => {console.log(progress)})
+                resolve, reject, (progress) => {
+                    this.setState({progress})
+                })
         })
     }
 
@@ -641,7 +713,7 @@ export class SyncPage extends React.Component {
         TrackPlayer.addEventListener("playback-state", (state) => {console.log("on new state:" + state)})
         TrackPlayer.addEventListener("playback-queue-ended", (track, position) => {console.log("on queue end")})
         TrackPlayer.addEventListener("playback-error", (error, message) => {console.log("on error: " + message)})
-    */
+        */
         console.log(track)
 
         // Adds a track to the queue
@@ -749,11 +821,35 @@ export class SyncPage extends React.Component {
 
                     </View>
                 }
+
+                {!this.state.isDownloading?null:
+                    <View style={{
+                        flex:1,
+                        alignItems:'center',
+                        justifyContent: 'center',
+                        height:'100%'
+                    }}>
+
+                    {this.state.dlalive?
+                        <TouchableOpacity onPress={() => {this.setState({dlalive: false})}}>
+                            <Text style={{padding: 5}}>Stop Download</Text>
+                        </TouchableOpacity>:
+                        <Text style={{padding: 5}}>Stopping Download...</Text>}
+
+                    {this.state.dlcount>0?
+                        <Text>{1+this.state.dlindex}/{this.state.dlcount}: {
+                            this.state.dlsongs[this.state.dlindex].metadata.artist} - {
+                            this.state.dlsongs[this.state.dlindex].metadata.title} - {
+                            this.state.progress?(Math.round(100*this.state.progress.bytesTransfered/this.state.progress.fileSize)):0}%</Text>:null}
+
+                    </View>
+                }
                 <ForestView
                     ref='forest'
                     data={this.state.data}
                     selected={this.state.defaultSelected}
-                    itemKeyExtractor={(item) => item.uid}/>
+                    itemKeyExtractor={(item) => item.uid}
+                    highlightMode="check"/>
 
             </View>
         );

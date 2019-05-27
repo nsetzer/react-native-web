@@ -41,7 +41,7 @@ export function setAxiosConfig(config, baseUrl=null) {
     }
 }
 
-function authConfig() {
+export function authConfig() {
     if (Platform.OS === 'web') {
         const token = localStorage.getItem("user_token")
         return {withCredentials: true, headers: {Authorization: token}}

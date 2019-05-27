@@ -23,6 +23,16 @@ class ForestFooter extends React.PureComponent {
 
 export class TreeLeaf extends React.Component {
 
+    constructor(props) {
+        super(props);
+
+        // the dummy parameter forces the parent to re-render
+        // when the value changes
+        this.state = {
+            dummy: false
+        }
+    }
+
     selectChild(key, state=null) {
         this.props.selectChild(key)
     }
@@ -33,22 +43,27 @@ export class TreeLeaf extends React.Component {
         const nodeKey = this._reactInternalFiber.key;
         const isSelected = this.props.isSelected(nodeKey)
         const bgcolor = isSelected?'#257AFD':null
+        const fgcolor = isSelected?'white':'black'
 
         return (
             <View style={{flex:1, flexDirection: 'row', alignItems: 'center', paddingTop: 5}}>
 
-                <View style={{width: boxWidth, height: boxWidth, backgroundColor:'blue', paddingRight: 5, }}></View>
+                <View style={{width: boxWidth, height: boxWidth, paddingRight: 5, }}></View>
 
-                <CheckBox
-                    style={{paddingRight: 5}}
-                    onClick={()=>{this.selectChild(nodeKey)}}
-                    isChecked={isSelected}
-                />
+                {this.props.highlightMode==='check'?
+                    <CheckBox
+                        style={{paddingRight: 5}}
+                        onClick={()=>{this.setState({dummy: !this.state.dummy}); this.selectChild(nodeKey)}}
+                        isChecked={isSelected}
+                    />:
+                    null}
 
-                <TouchableOpacity onPress={()=>{this.selectChild(nodeKey)}}
-                    style={{flexGrow: 1}}>
-                <Text style={{backgroundColor: bgcolor, }}>{this.props.data.title}</Text>
-                </TouchableOpacity>
+                {this.props.highlightMode==='row'?
+                    <TouchableOpacity onPress={()=>{this.setState({dummy: !this.state.dummy}); this.selectChild(nodeKey)}}
+                        style={{backgroundColor: bgcolor, color: fgcolor, flexGrow: 1}}>
+                        <Text>{this.props.data.title}</Text>
+                    </TouchableOpacity>:
+                    <Text>{this.props.data.title}</Text>}
             </View>
         )
     }
@@ -58,7 +73,34 @@ export class TreeSubCard extends React.Component {
 
     constructor(props) {
         super(props);
+
+        // the dummy parameter forces the parent to re-render
+        // when the value changes
+        this.state = {
+            dummy: false
+        }
     }
+
+    /*
+    shouldComponentUpdate(nextProps, nextState) {
+
+        // TODO: danger zone - react internals
+        const nodeKey = this._reactInternalFiber.key;
+
+        if (this.props.selected === undefined) {
+            return true
+        }
+        if (this.props.expanded === undefined) {
+            return true
+        }
+
+        if (this.props.selected[nodeKey] != nextProps.selected[nodeKey] ||
+            this.props.expanded[nodeKey] != nextProps.expanded[nodeKey]) {
+            return true
+        }
+        return false
+    }
+    */
 
     selectChild(key, state=null) {
         var nextState = {}
@@ -120,21 +162,25 @@ export class TreeSubCard extends React.Component {
             <View style={{paddingTop: 5}}>
 
             <View style={{flex:1, flexDirection: 'row', alignItems: 'center'}}>
-                <TouchableOpacity onPress={()=>{this.props.expandChild(nodeKey)}}
+                <TouchableOpacity onPress={()=>{this.setState({dummy: !this.state.dummy}); this.props.expandChild(nodeKey)}}
                     style={{paddingRight: 5}}>
                     <View style={{width: boxWidth, height: boxWidth,backgroundColor:'blue'}}></View>
                 </TouchableOpacity>
 
-                <CheckBox
-                    style={{paddingRight: 5}}
-                    onClick={()=>{this.selectParent(nodeKey)}}
-                    isChecked={isSelected}
-                />
+                {this.props.highlightMode==='check'?
+                    <CheckBox
+                        style={{paddingRight: 5}}
+                        onClick={()=>{this.setState({dummy: !this.state.dummy}); this.selectParent(nodeKey)}}
+                        isChecked={isSelected}
+                    />:
+                    null}
 
-                <TouchableOpacity onPress={()=>{this.selectParent(nodeKey)}}
-                    style={{backgroundColor: bgcolor,flexGrow: 1}}>
-                    <Text >{this.props.title}</Text>
-                </TouchableOpacity>
+                {this.props.highlightMode==='row'?
+                    <TouchableOpacity onPress={()=>{this.setState({dummy: !this.state.dummy}); this.selectParent(nodeKey)}}
+                        style={{backgroundColor: bgcolor,flexGrow: 1}}>
+                        <Text >{this.props.title}</Text>
+                    </TouchableOpacity>:
+                    <Text >{this.props.title}</Text>}
             </View>
 
 
@@ -143,6 +189,7 @@ export class TreeSubCard extends React.Component {
                 this.props.data.map((item, index) => {
                     return (
                         <TreeLeaf
+                            highlightMode={this.props.highlightMode||'row'}
                             key={nodeKey + '_' + index.toString()}
                             selectChild={this.selectChild.bind(this)}
                             isSelected={this.props.isSelected}
@@ -161,6 +208,25 @@ export class TreeCard extends React.Component {
     constructor(props) {
         super(props);
 
+    }
+
+    shouldComponentUpdate(nextProps, nextState) {
+
+        // TODO: danger zone - react internals
+        const nodeKey = this._reactInternalFiber.key;
+
+        if (this.props.selected === undefined) {
+            return true
+        }
+        if (this.props.expanded === undefined) {
+            return true
+        }
+
+        if (this.props.selected[nodeKey] != nextProps.selected[nodeKey] ||
+            this.props.expanded[nodeKey] != nextProps.expanded[nodeKey]) {
+            return true
+        }
+        return false
     }
 
     selectParent(key) {
@@ -229,27 +295,34 @@ export class TreeCard extends React.Component {
                     <View style={{width: boxWidth, height: boxWidth, backgroundColor:'blue'}}></View>
                 </TouchableOpacity>
 
-                <CheckBox
-                    style={{paddingRight: 5}}
-                    onClick={()=>{this.selectParent(nodeKey)}}
-                    isChecked={isSelected}
-                />
+                {this.props.highlightMode==='check'?
+                    <CheckBox
+                        style={{paddingRight: 5}}
+                        onClick={()=>{this.selectParent(nodeKey)}}
+                        isChecked={isSelected}
+                    />:
+                    null}
 
-                <TouchableOpacity onPress={()=>{this.selectParent(nodeKey)}}
-                    style={{flexGrow: 1}}>
-                    <Text style={{backgroundColor: bgcolor}}>{this.props.title}</Text>
-                </TouchableOpacity>
+                {this.props.highlightMode==='row'?
+                    <TouchableOpacity onPress={()=>{this.selectParent(nodeKey)}}
+                        style={{backgroundColor: bgcolor, flexGrow: 1}}>
+                        <Text>{this.props.title}</Text>
+                    </TouchableOpacity>:
+                    <Text>{this.props.title}</Text>}
             </View>
 
             <View style={{marginLeft: boxWidth}}>
             {(this.props.isExpanded(nodeKey) && this.props.data)?
                 Object.keys(this.props.data).map((k, index) => {
                     return (<TreeSubCard
+                            highlightMode={this.props.highlightMode||'row'}
                             expandChild={this.props.expandChild}
                             isExpanded={this.props.isExpanded}
                             selectChild={this.props.selectChild}
                             selectFix={this.fixSelection.bind(this)}
                             isSelected={this.props.isSelected}
+                            selected={this.props.selected}
+                            expanded={this.props.expanded}
                             key={nodeKey + '_' + index.toString()}
                             title={k}
                             data={this.props.data[k]}>
@@ -433,7 +506,11 @@ export default class ForestView extends React.Component {
             selectChild={this._selectChild.bind(this)}
             selectFix={this._fixSelection.bind(this)}
             isSelected={this._isSelected.bind(this)}
-            data={this.props.data[item]}>
+            data={this.props.data[item]}
+            selected={this.state.selected}
+            expanded={this.state.expansion}
+            highlightMode={this.props.highlightMode||'row'}
+            >
         </TreeCard>
     );
 
