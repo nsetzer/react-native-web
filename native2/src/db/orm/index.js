@@ -1,6 +1,35 @@
 
 import { openDatabase } from 'react-native-sqlite-storage';
 
+/*
+SQLitePlugin.prototype.addTransaction(t)
+SQLitePlugin.prototype.transaction(fn, error, success)
+SQLitePlugin.prototype.readTransaction(fn, error, success)
+SQLitePlugin.prototype.startNextTransaction()
+SQLitePlugin.prototype.abortAllPendingTransactions()
+SQLitePlugin.prototype.sqlBatch(sqlStatements, success, error)
+SQLitePlugin.prototype.open(success, error)
+SQLitePlugin.prototype.close(success, error)
+SQLitePlugin.prototype.attach(dbNameToAttach, dbAlias, success, error)
+SQLitePlugin.prototype.detach(dbAlias, success, error)
+SQLitePlugin.prototype.executeSql(statement, params, success, error)
+SQLitePluginTransaction.prototype.start()
+SQLitePluginTransaction.prototype.executeSql(sql, values, success, error)
+SQLitePluginTransaction.prototype.addStatement(sql, values, success, error)
+SQLitePluginTransaction.prototype.handleStatementSuccess(handler, response)
+SQLitePluginTransaction.prototype.handleStatementFailure(handler, response)
+SQLitePluginTransaction.prototype.run()
+SQLitePluginTransaction.prototype.abort(txFailure)
+SQLitePluginTransaction.prototype.finish()
+SQLitePluginTransaction.prototype.abortFromQ(sqlerror)
+SQLiteFactory.prototype.DEBUG(debug)
+SQLiteFactory.prototype.sqliteFeatures()
+SQLiteFactory.prototype.openDatabase(function(args)
+SQLiteFactory.prototype.echoTest(success, error)
+SQLiteFactory.prototype.deleteDatabase(first,success, error)
+
+
+*/
 // ----------------------------------------------------------------------------
 // util
 // ----------------------------------------------------------------------------
@@ -32,6 +61,15 @@ export function sql_prepare_schema(schema) {
         //statements.push({sql: "DROP TABLE IF EXISTS " + tbl.name, params: []});
 
         statements.push({sql: table + "(" + columns + ")", params: []});
+
+        for (var j=0; j < tbl.columns.length; j++) {
+            var coldef = tbl.columns[j]
+            if (!!coldef.index) {
+                var mk_index = "CREATE INDEX IF NOT EXISTS ix_" +
+                    tbl.name + "_" + coldef.name + " ON " + tbl.name + "(" + coldef.name + ")"
+                statements.push({sql: mk_index, params: []});
+            }
+        }
     }
     return statements;
 }
@@ -201,6 +239,41 @@ export function sql_prepare_delete_bulk(table, spks) {
     return {sql, params}
 }
 
+// npk must be in the form {column: value}
+// npk must have at least one column
+export function sql_prepare_exists(table, npk) {
+
+    var params = []
+    var clause = Object.keys(npk).map((key) => {
+        params.push(npk[key])
+        return key + " == ?"
+    }).join(" && ")
+
+    var sql = " SELECT spk FROM " + table + "WHERE (" + clause + ") LIMIT 1"
+    return {sql, params}
+}
+
+// npk must be in the form {column: list-of-values}
+// npk must have exactly one key
+export function sql_prepare_exists_batch(table, npk) {
+
+    if (Object.keys(npk).length !== 1) {
+        throw "npk must be a single column!";
+    }
+
+    var col = Object.keys(npk)[0]
+
+    var params = []
+    var clause = npk[col].map((value) => {
+        params.push(value)
+        return "?"
+    }).join(", ")
+
+    clause = col + " IN (" + clause + " )"
+
+    var sql = "SELECT spk, " + col + " FROM " + table + " WHERE " + clause
+    return {sql, params}
+}
 
 // ----------------------------------------------------------------------------
 // SQL ASYNC
@@ -231,8 +304,8 @@ export async function transaction(db) {
 export async function execute(db, sql, params) {
 
     const tx = await transaction(db)
-    console.log("statement: " + sql)
-    console.log("parameters: " + JSON.stringify(params))
+    //console.log("statement: " + sql)
+    //console.log("parameters: " + JSON.stringify(params))
 
     return await new Promise((resolve, reject) => {
         tx.executeSql(sql, params, (tx_, result) => {
@@ -257,6 +330,23 @@ export async function execute_many(db, statements) {
     return results
 }
 
+export async function execute_batch(db, statements) {
+
+    results = []
+
+    var st = statements.map((item) => [item.sql, item.params])
+
+    // console.log("executing batch of " + statements.length)
+    return await new Promise((resolve, reject) => {
+        db.sqlBatch(st,
+            () => {
+                resolve()
+            },
+            (e) => {
+                reject(e)
+            })
+    })
+}
 
 // ----------------------------------------------------------------------------
 // SQL UTIL
@@ -293,6 +383,7 @@ export async function dbconnect(opts) {
     connection.execute = async (sql, params) => {return execute(connection.db, sql, params);}
     connection.execute_single = async (statement) => {return execute(connection.db, statement.sql, statement.params);}
     connection.execute_many = async (statements) => {return execute_many(connection.db, statements);}
+    connection.execute_batch = async (statements) => {return execute_batch(connection.db, statements);}
 
     connection.prepare = new Object();
     connection.prepare.schema = (schema) => sql_prepare_schema(schema);
@@ -304,12 +395,18 @@ export async function dbconnect(opts) {
     connection.prepare.delete = (tbl_name, spk) => sql_prepare_delete(tbl_name, spk);
     connection.prepare.delete_bulk = (tbl_name, spks) => sql_prepare_delete_bulk(tbl_name, spks);
 
+    connection.prepare.exists = (tbl_name, npk) => sql_prepare_exists(tbl_name, npk);
+    connection.prepare.exists_batch = (tbl_name, npk_list) => sql_prepare_exists_batch(tbl_name, npk_list);
+
     return connection
 }
 
 function _dbinit_table(db, tbl) {
     var col = new Object()
     db.tables[tbl.name] = col;
+
+    col.prepare_insert = (value) => db.prepare.insert(tbl.name, tbl.columns, value)
+    col.prepare_update = (spk_or_npk, value) => db.prepare.update(tbl.name, tbl.columns, spk_or_npk, value)
 
     col.insert = async (value) => db.execute_single(db.prepare.insert(tbl.name, tbl.columns, value))
     col.insert_bulk = async (values) => db.execute_single(db.prepare.insert_bulk(tbl.name, tbl.columns, values))
@@ -321,26 +418,34 @@ function _dbinit_table(db, tbl) {
     col.delete = async (spk) => db.execute_single(db.prepare.delete(tbl.name, spk))
     col.delete_bulk = async (spks) => db.execute_single(db.prepare.delete_bulk(tbl.name, spks))
 
+    col.exists = async (npk) => db.execute_single(db.prepare.exists(tbl.name, npk))
+    col.exists_batch = async (npk_list) => db.execute_single(db.prepare.exists_batch(tbl.name, npk_list))
+
     col.count = async () => _count(db, tbl.name)
 }
 
 export async function dbinit(opts, schema) {
 
-    var db = await dbconnect(opts);
+    try {
+        var db = await dbconnect(opts);
 
-    var statements = db.prepare.schema(schema)
+        var statements = db.prepare.schema(schema)
 
-    await db.execute_many(statements)
+        await db.execute_many(statements)
 
-    db.tables = new Object();
-    db.t = db.tables
+        db.tables = new Object();
+        db.t = db.tables
 
-    // construct objects representing tables
-    for (var i=0; i < schema.length; i++) {
-        _dbinit_table(db, schema[i])
+        // construct objects representing tables
+        for (var i=0; i < schema.length; i++) {
+            _dbinit_table(db, schema[i])
+        }
+
+        return {db, result: null};
+    } catch (error) {
+        console.log(error)
+        return {db: null, result: null};
     }
-
-    return {db, result: null};
 }
 
 async function _count(db, tbl_name) {

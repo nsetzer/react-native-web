@@ -22,16 +22,16 @@ export const dbSchema = [
         name: 'songs',
         columns: [
             {name: "spk",        type: "INTEGER PRIMARY KEY AUTOINCREMENT", },
-            {name: "uid",        type: "VARCHAR UNIQUE", },
+            {name: "uid",        type: "VARCHAR UNIQUE", index: true},
             {name: "user_id",    type: "VARCHAR NOT NULL", },
 
             {name: "sync",       type: "INTEGER DEFAULT 0", }, // download this resource
             {name: "synced",     type: "INTEGER DEFAULT 0", }, // resource has been downloaded
 
-            {name: "artist",     type: "VARCHAR NOT NULL", },
+            {name: "artist",     type: "VARCHAR NOT NULL", index: true },
             {name: "artist_key", type: "VARCHAR", },
-            {name: "album",      type: "VARCHAR NOT NULL", },
-            {name: "title",      type: "VARCHAR NOT NULL", },
+            {name: "album",      type: "VARCHAR NOT NULL", index: true },
+            {name: "title",      type: "VARCHAR NOT NULL", index: true },
             {name: "composer",   type: "VARCHAR", },
             {name: "comment",    type: "VARCHAR", },
             {name: "country",    type: "VARCHAR", },
@@ -44,15 +44,15 @@ export const dbSchema = [
             {name: "art_path",       type: "VARCHAR", },
             {name: "art_size",       type: "INTEGER", },
 
-            {name: "play_count",  type: "INTEGER DEFAULT 0", },
-            {name: "skip_count",  type: "INTEGER DEFAULT 0", },
-            {name: "album_index",     type: "INTEGER DEFAULT 0", },
-            {name: "year",     type: "INTEGER DEFAULT 0", },
-            {name: "length",     type: "INTEGER DEFAULT 0", },
-            {name: "rating",     type: "INTEGER DEFAULT 0", },
+            {name: "play_count",     type: "INTEGER DEFAULT 0", },
+            {name: "skip_count",     type: "INTEGER DEFAULT 0", },
+            {name: "album_index",    type: "INTEGER DEFAULT 0", },
+            {name: "year",           type: "INTEGER DEFAULT 0", },
+            {name: "length",         type: "INTEGER DEFAULT 0", },
+            {name: "rating",         type: "INTEGER DEFAULT 0", },
 
             {name: "date_added",     type: "INTEGER DEFAULT 0", },
-            {name: "last_played",     type: "INTEGER DEFAULT 0", },
+            {name: "last_played",    type: "INTEGER DEFAULT 0", index: true },
 
         ]
     },
@@ -62,7 +62,7 @@ export const dbSchema = [
             {name: "spk",           type: "INTEGER PRIMARY KEY AUTOINCREMENT", },
             {name: "song_id",       type: "VARCHAR", },
             {name: "user_id",       type: "VARCHAR", },
-            {name: "timestamp",     type: "INTEGER", },
+            {name: "timestamp",     type: "INTEGER DEFAULT 0", index: true },
         ]
     },
     {
@@ -75,17 +75,17 @@ export const dbSchema = [
 
             {name: "rel_path",          type: "VARCHAR", },
 
-            {name: "local_version",     type: "VARCHAR", },
-            {name: "remote_version",    type: "VARCHAR", },
+            {name: "local_version",     type: "INTEGER DEFAULT 0", },
+            {name: "remote_version",    type: "INTEGER DEFAULT 0", },
 
-            {name: "local_size",        type: "VARCHAR", },
-            {name: "remote_size",       type: "VARCHAR", },
+            {name: "local_size",        type: "INTEGER DEFAULT 0", },
+            {name: "remote_size",       type: "INTEGER DEFAULT 0", },
 
-            {name: "local_permission",  type: "VARCHAR", },
-            {name: "remote_permission", type: "VARCHAR", },
+            {name: "local_permission",  type: "INTEGER DEFAULT 0", },
+            {name: "remote_permission", type: "INTEGER DEFAULT 0", },
 
-            {name: "local_mtime",       type: "VARCHAR", },
-            {name: "remote_mtime",      type: "VARCHAR", },
+            {name: "local_mtime",       type: "INTEGER DEFAULT 0", },
+            {name: "remote_mtime",      type: "INTEGER DEFAULT 0", },
 
             {name: "remote_public",     type: "VARCHAR", },
             {name: "remote_encryption", type: "VARCHAR", },

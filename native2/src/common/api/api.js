@@ -34,8 +34,11 @@ if (process.env.REACT_APP_BACKEND_PATH) {
 
 var _axiosConfig = {withCredentials: true, auth: {username: "admin", password: 'admin'}}
 
-export function setAxiosConfig(config) {
+export function setAxiosConfig(config, baseUrl=null) {
     _axiosConfig = config
+    if (!!baseUrl) {
+        env.baseUrl = baseUrl
+    }
 }
 
 function authConfig() {

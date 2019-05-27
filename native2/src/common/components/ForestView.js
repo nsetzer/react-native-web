@@ -6,17 +6,6 @@ import CheckBox from './CheckBox'
 
 // todo selection mode CHECK or HIGHLIGHT
 
-// TODO: version 2 render a single flat list
-//       convert all data into a singular Object
-//       {depth: <>, title: <>, item: <>, uid: <>, children: <>}
-//       item only renders if expand is true
-//       recursion is not required
-//       children is a list of indices into the data of the children
-//       children will always be an index greater than parents
-//       non leaf items will have a null item
-//       consider using section ist over flat list
-//       https://facebook.github.io/react-native/docs/sectionlist
-
 const boxWidth = 15;
 
 const styles = StyleSheet.create({
@@ -274,6 +263,31 @@ export class TreeCard extends React.Component {
     }
 }
 
+function _setSelection(data, parentKey, attr, keys, keyExtractor) {
+        var result = true
+        if (Array.isArray(data)) {
+            data.map((leaf, index) => {
+                var k = parentKey + '_' + index.toString()
+                var item_key = keyExtractor(leaf)
+                if (!!keys[item_key]) {
+                    attr[k] = true
+                }
+                result = result && attr[k]
+            })
+        } else {
+            Object.keys(data).map((key, index) => {
+                var child_key = parentKey + '_' + index.toString()
+                var t = _setSelection(data[key], child_key, attr, keys, keyExtractor)
+                if (t) {
+                    attr[child_key] = true
+                } else {
+                    result = false
+                }
+            })
+        }
+        return result;
+    }
+
 export default class ForestView extends React.Component {
 
     constructor(props) {
@@ -282,8 +296,26 @@ export default class ForestView extends React.Component {
         this.state = {
             expansion: {},
             selected: {},
+            data: null
         }
     }
+
+    static getDerivedStateFromProps(props, state) {
+
+        if (props.data !== state.data) {
+            // the parent of this component can drive the initial
+            // check state when updating the data props
+            const selected = {}
+            if (props.selected) {
+                _setSelection(props.data, 'n', selected,
+                    props.selected, props.itemKeyExtractor)
+            }
+            return {data:props.data, selected, expansion: {}}
+        }
+
+        return null
+    }
+
 
     _expandChild(key, state=null) {
         // toggle by default
@@ -351,6 +383,9 @@ export default class ForestView extends React.Component {
         }
     }
 
+    // return true if all elements at this level are true
+
+
     async expandAll(bExpand) {
         const expansion = {}
         if (bExpand) {
@@ -376,15 +411,15 @@ export default class ForestView extends React.Component {
     }
 
     async getSelection() {
-
         const selected = []
         this._getAllTrue(this.props.data, 'n', this.state.selected, selected)
         return selected
     }
 
-    async setSelection(keys) {
-        // TODO: requires itemKeyExtractor for leaf elements
-        // TODO: requires fix selection for all tree roots
+    async setSelection(keys, keyExtractor) {
+        const selected = {}
+        this._setSelection(this.props.data, 'n', selected, keys, keyExtractor)
+        this.setState({selected})
     }
 
     itemKeyExtractor = (key, index) => 'n_' + index.toString();
@@ -413,6 +448,9 @@ export default class ForestView extends React.Component {
                 keyExtractor={this.itemKeyExtractor}
                 renderItem={this.itemRenderItem.bind(this)}
                 ListFooterComponent={ForestFooter}
+                initialNumToRender={5}
+                maxToRenderPerBatch={10}
+                windowSize={10}
                 />
 
             </View>
