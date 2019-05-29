@@ -584,7 +584,7 @@ export class SyncPage extends React.Component {
         const response = await authenticate(cfg.auth.username, cfg.auth.password)
         var token = response.data.token
 
-        result = await this.props.db.execute("SELECT uid, sync, synced, artist, album, title, album_index from songs WHERE sync == 1 LIMIT 5", [])
+        result = await this.props.db.execute("SELECT uid, sync, synced, artist, album, title, album_index from songs WHERE sync == 1", [])
 
         var filename
         var dlsongs = []
@@ -659,7 +659,7 @@ export class SyncPage extends React.Component {
         if (dlindex < dlsongs.length) {
             this.setState({dlindex}, () => {
                 this._doDownloadMain().then(
-                        (result) => {console.log("download song complete")},
+                        (result) => {},
                         (error) => {console.log(error)}
                     )
             })

@@ -1,13 +1,28 @@
 
 
 import React from 'react';
-import { Text, View, TouchableOpacity, PermissionsAndroid } from "react-native";
+import { Text, View, TouchableOpacity, TextInput } from "react-native";
 import { connect } from "react-redux";
 
-import { env, librarySearch, authenticate, downloadFile, dirs } from '../common/api';
+import { env, librarySearch, authenticate, downloadFile, dirs, authConfig } from '../common/api';
+import { setConfig } from '../config';
+
 import ForestView from '../common/components/ForestView';
 
 import TrackPlayer from 'react-native-track-player';
+
+import CheckBox from '../common/components/CheckBox'
+
+function trim(s)
+{
+    return String(s).replace(/^\s+|\s+$/g, '');
+};
+
+
+// TODO: filter songs by
+//   - valid is set
+//   - synced is true if 'local only' is set
+//   - otherwise streaming of music is possible
 
 export class LibraryPage extends React.Component {
 
@@ -18,6 +33,9 @@ export class LibraryPage extends React.Component {
             db: null,
             data: {},     // search results formatted for a forest
             raw_data: {}, // search results
+
+            includeRemote: false,
+            searchText: "",
         }
     }
 
@@ -30,7 +48,37 @@ export class LibraryPage extends React.Component {
 
     async _search() {
 
-        result = await this.props.db.execute("SELECT uid, artist, album, title, file_path, art_path, length FROM songs WHERE synced == 1 ORDER BY artist_key, album, title ASC", [])
+        var items = this.state.searchText.split().map(s => trim(s)).filter(s => s);
+        var cols = ['artist', 'album', 'title']
+
+        var rule = items.map(s => ('(' + cols.map(c => (c + ' LIKE ?')).join(' OR ') + ')')).join(' AND ')
+        var params = []
+        for (var i=0; i < items.length; i++) {
+            for (var j=0; j < cols.length; j++) {
+                params.push('%' + items[i] + '%')
+            }
+        }
+
+        var clause
+        if (this.state.includeRemote) {
+            if (items.length > 0) {
+                clause = "WHERE (" + rule + ")"
+            } else {
+                clause = ""
+            }
+        } else {
+            if (items.length > 0) {
+                clause = "WHERE (synced == 1 AND (" + rule + "))"
+            } else {
+                clause = "WHERE (synced == 1)"
+            }
+        }
+
+        console.log(clause)
+
+        var cols_select = "uid, synced, artist, album, title, file_path, art_path, length"
+        result = await this.props.db.execute("SELECT " + cols_select + " FROM songs " +
+            clause + " ORDER BY artist_key, album, title ASC", params)
 
         data = {}
         raw_data = {}
@@ -99,22 +147,59 @@ export class LibraryPage extends React.Component {
         this.setState({data, raw_data})
     }
 
-    play() {
-        this._play().then(
-            (result) => {console.log("sync complete")},
+    create() {
+        this._create().then(
+            (result) => {},
             (error) => {console.error(error)}
         )
     }
 
-    async _play() {
+    async _create() {
 
-        var result = await this.props.db.execute("SELECT uid, artist, album, title, file_path, art_path, length from songs WHERE synced == 1 LIMIT 1", [])
+        // var result = await this.props.db.execute("SELECT uid, artist, album, title, file_path, art_path, length from songs WHERE synced == 1 LIMIT 50", [])
+
+        var selected = await this.refs.forest.getSelection()
+
+        setConfig()
+        var cfg = authConfig()
+        const response = await authenticate(cfg.auth.username, cfg.auth.password)
+        var token = response.data.token
 
         if (result.rows.length < 0) {
             return
         }
 
-        var track = result.rows.item(0)
+        var i, track, tracks=[]
+        for (i=0; i < selected.length; i++) {
+            song = selected[i]
+
+
+            track = {
+                id: song.uid,
+                title: song.title,
+                artist: song.artist,
+                album: song.album,
+                duration: song.length,
+                //artwork: ''
+            }
+
+            if (song.synced) {
+                track.url = song.file_path
+            } else {
+                // Utils.java inside track-player is responsible
+                // for converting a url, it does not seem to fully
+                // support extended URIs, with header support
+                track.url = env.baseUrl + "/api/library/" + song.uid + "/audio?token=" + token
+            }
+
+            console.log(track)
+            tracks.push(track)
+
+        }
+
+        await TrackPlayer.reset()
+        await TrackPlayer.add(tracks);
+        await TrackPlayer.play();
 
         //await TrackPlayer.setupPlayer({})
 
@@ -135,33 +220,12 @@ export class LibraryPage extends React.Component {
         TrackPlayer.addEventListener("playback-queue-ended", (track, position) => {console.log("on queue end")})
         TrackPlayer.addEventListener("playback-error", (error, message) => {console.log("on error: " + message)})
         */
-        console.log(track)
 
         // Adds a track to the queue
-        await TrackPlayer.add({
-            id: track.uid,
-            url: track.file_path,
-            title: track.title,
-            artist: track.artist,
-            album: track.album,
-            duration: track.length,
-            //artwork: ''
-        });
+
 
         // Starts playing it
-        TrackPlayer.play();
-    }
-
-    pause() {
-        this._pause().then(
-            (result) => {console.log("sync complete")},
-            (error) => {console.error(error)}
-        )
-    }
-
-    async _pause() {
-
-        TrackPlayer.pause();
+        //TrackPlayer.play();
     }
 
     expandToggle() {
@@ -180,6 +244,10 @@ export class LibraryPage extends React.Component {
 
     render() {
 
+        if (!this.props.db) {
+            return (<Text>error loading db</Text>)
+        }
+
         return (
             <View style={{
                 flex:1,
@@ -187,26 +255,41 @@ export class LibraryPage extends React.Component {
                 justifyContent: 'center',
                 height:'100%'
             }}>
-                {(!this.props.db)?<Text>error loading db</Text>:
-                    <View style={{
+                <View style={{
+                    flex:1,
+                    flexDirection: 'row',
+                    alignItems: 'center'
+                }}>
+
+
+                <TextInput
+                    ref='editSearch'
+                    style={{flexGrow: 1, borderWidth: 1, borderColor: 'black'}}
+                    onChangeText={(text) => this.setState({searchText: text})}
+                    onSubmitEditing={() => {this.search()}}
+                    />
+
+                <TouchableOpacity onPress={() => {this.search()}}>
+                    <Text style={{padding: 5}}>Search</Text>
+                </TouchableOpacity>
+
+                <CheckBox
+                    style={{paddingRight: 5}}
+                    onClick={()=>{this.setState({includeRemote: !this.state.includeRemote})}}
+                    isChecked={this.state.includeRemote}
+                />
+                </View>
+
+                <View style={{
                         flex:1,
                         flexDirection: 'row',
+                        alignItems: 'center'
                     }}>
-
-                    <TouchableOpacity onPress={() => {this.search()}}>
-                        <Text style={{padding: 5}}>Search</Text>
+                    <TouchableOpacity onPress={() => {this.create()}}>
+                        <Text style={{padding: 5}}>create</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity onPress={() => {this.play()}}>
-                        <Text style={{padding: 5}}>play</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity onPress={() => {this.pause()}}>
-                        <Text style={{padding: 5}}>pause</Text>
-                    </TouchableOpacity>
-
-                    </View>
-                }
+                </View>
                 <ForestView ref='forest' data={this.state.data}/>
 
             </View>

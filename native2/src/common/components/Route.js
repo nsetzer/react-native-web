@@ -230,7 +230,7 @@ class IRouter extends React.Component {
             this.props.initLocation(window.location.pathname);
           };
         } else {
-          this.props.initLocation("/u/sync") // TODO
+          this.props.initLocation("/u/queue") // TODO
         }
     }
 

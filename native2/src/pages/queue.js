@@ -19,6 +19,56 @@ class QueueFooter extends React.PureComponent {
   }
 }
 
+class QueueItem extends React.PureComponent {
+
+    moveUp() {
+        this.props.moveUp(this.props.index)
+    }
+
+    moveDown() {
+        this.props.moveDown(this.props.index)
+    }
+
+    removeTrack() {
+        console.log("remove: " + this.props.index)
+        this.props.removeTrack(this.props.index)
+    }
+
+    render() {
+        return (
+            <View style={{flex:1, flexDirection: 'row', alignItems: 'center', width: '100%',
+                marginBottom: 7,
+                borderColor: 'black',
+                borderWidth: 1,
+                backgroundColor: (this.props.isCurrent==this.props.track.id)?'#00005533':'transparent'
+            }}
+            >
+                <Text style={{padding: 5, width: 40, fontWeight: '300', textAlign: 'right'}}>{this.props.index+1}</Text>
+                <View style={{flex:1, flexDirection: 'column', alignItems: 'flex-start'}}>
+                    <Text style={{fontWeight: '900', padding: 5}}>{this.props.track.title}</Text>
+                    <Text style={{fontWeight: '300', padding: 5}}>{this.props.track.artist}</Text>
+                </View>
+                {(this.props.isCurrent===this.props.track.id)?null:
+                    <View style={{flex:1, flexDirection: 'column', alignItems: 'flex-end'}}>
+                        <TouchableOpacity onPress={this.moveUp.bind(this)}>
+                            <Text style={{padding: 5, }}>UP</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={this.moveDown.bind(this)}>
+                            <Text style={{padding: 5}}>DN</Text>
+                        </TouchableOpacity>
+                    </View>
+                }
+
+                {(this.props.isCurrent===this.props.track.id)?null:
+                    <TouchableOpacity onPress={this.removeTrack.bind(this)}>
+                        <Text style={{padding: 5}}>RM</Text>
+                    </TouchableOpacity>
+                }
+            </View>
+        )
+    }
+
+}
 
 class QueuePage extends React.Component {
 
@@ -26,61 +76,202 @@ class QueuePage extends React.Component {
         super(props);
 
         this.state = {
-            queue: []
+            queue: [],
+            current_track_id: null
         }
     }
 
     componentWillMount() {
 
 
+        this._getQueue()
+
+        TrackPlayer.addEventListener('playback-track-changed', (prevTrackId, prevPosition, nextTrackId) => {
+            this.setState({current_track_id: nextTrackId})
+        })
+    }
+
+    _getQueue() {
         TrackPlayer.getQueue().then(
-            (tracks) => {this.setState({queue: tracks})},
+            (tracks) => {
+                this.setState({queue: tracks})
+                TrackPlayer.getCurrentTrack().then(
+                    (uid) => {console.log('current: ' + uid); this.setState({current_track_id: uid})},
+                    (error) => {this.setState({current_track_id: null})},
+                )
+            },
             (error) => {this.setState({queue: []})},
         )
     }
 
-    itemKeyExtractor = (key, index) => 'n_' + index.toString();
+    moveUp(index) {
+
+        var track = this.state.queue[index];
+
+        if (this.state.current_track_id == track.id) {
+            return
+        }
+
+        if (index-1 < 0) {
+            return
+        }
+
+        var insertBeforeId = this.state.queue[index-1].id
+
+        TrackPlayer.remove(track.id).then(
+            () => {
+                TrackPlayer.add(track, insertBeforeId).then (
+                    () => {
+                        this._getQueue()
+                    },
+                    (error) => {console.log(error)}
+                )
+            },
+            (error) => {console.log(error)}
+        )
+
+    }
+
+    moveDown(index) {
+
+        var track = this.state.queue[index];
+
+        if (this.state.current_track_id == track.id) {
+            return
+        }
+
+        var insertBeforeId = null;
+        if (index+2 < this.state.queue.length) {
+            insertBeforeId = this.state.queue[index+2].id
+        }
+
+        TrackPlayer.remove(track.id).then(
+            () => {
+                TrackPlayer.add(track, insertBeforeId).then (
+                    () => {
+                        this._getQueue()
+                    },
+                    (error) => {console.log(error)}
+                )
+            },
+            (error) => {console.log(error)}
+        )
+
+    }
+
+    removeTrack(index) {
+
+        var track = this.state.queue[index];
+
+        if (this.state.current_track_id == track.id) {
+            return
+        }
+
+        TrackPlayer.remove(track.id).then(
+            () => {
+
+            TrackPlayer.getQueue().then(
+                (tracks) => {
+                    this.setState({queue: tracks})
+                    TrackPlayer.getCurrentTrack().then(
+                        (uid) => {this.setState({current_track_id: uid})},
+                        (error) => {this.setState({current_track_id: null})},
+                    )
+                },
+                (error) => {this.setState({queue: []})},
+            )
+
+        })
+
+
+
+    }
+
+    itemKeyExtractor = (item, index) => item.id;
 
     itemRenderItem = ({item, index}) => (
-        <View
+        <QueueItem
             key={item.id}
-            title={item}
-            >
-            <Text>{index+1}. {item.artist} - {item.title}</Text>
-        </View>
+            track={item}
+            index={index}
+            isCurrent={this.state.current_track_id}
+            moveUp={this.moveUp.bind(this)}
+            moveDown={this.moveDown.bind(this)}
+            removeTrack={this.removeTrack.bind(this)}
+            />
     );
+
+    play() {
+        TrackPlayer.play();
+    }
+
+    pause() {
+        TrackPlayer.pause();
+    }
+
+    previous() {
+        TrackPlayer.skipToPrevious().then(
+            () => {
+                TrackPlayer.getCurrentTrack().then(
+                    (uid) => {this.setState({current_track_id: uid})},
+                    (error) => {this.setState({current_track_id: null})},
+                )
+            },
+            (error) => {console.log(error)},
+        )
+    }
+
+    next() {
+        TrackPlayer.skipToNext().then(
+            () => {
+                TrackPlayer.getCurrentTrack().then(
+                    (uid) => {this.setState({current_track_id: uid})},
+                    (error) => {this.setState({current_track_id: null})},
+                )
+            },
+            (error) => {console.log(error)},
+        )
+    }
 
     render() {
         return (
-            <View style={{
-                flex:1,
-                alignItems:'center',
-                justifyContent: 'center',
-                height:'100%'
-            }}>
+            <View>
+                <View style={{
+                    flex:1,
+                    alignItems:'center',
+                    justifyContent: 'center',
+                    height:'100%',
+                    width:'100%',
+                }}>
 
-                {(!this.props.db)?<Text>error loading db</Text>:
-                    <View style={{
-                        flex:1,
-                        flexDirection: 'row',
-                    }}>
+                    {(!this.props.db)?<Text>error loading db</Text>:
+                        <View style={{
+                            flex:1,
+                            flexDirection: 'row',
+                        }}>
 
-                    <TouchableOpacity onPress={() => {this.search()}}>
-                        <Text style={{padding: 5}}>Search</Text>
-                    </TouchableOpacity>
+                        <TouchableOpacity onPress={() => {this.play()}}>
+                            <Text style={{padding: 5}}>play</Text>
+                        </TouchableOpacity>
 
-                    <TouchableOpacity onPress={() => {this.play()}}>
-                        <Text style={{padding: 5}}>play</Text>
-                    </TouchableOpacity>
+                        <TouchableOpacity onPress={() => {this.pause()}}>
+                            <Text style={{padding: 5}}>pause</Text>
+                        </TouchableOpacity>
 
-                    <TouchableOpacity onPress={() => {this.pause()}}>
-                        <Text style={{padding: 5}}>pause</Text>
-                    </TouchableOpacity>
+                        <TouchableOpacity onPress={() => {this.next()}}>
+                            <Text style={{padding: 5}}>next</Text>
+                        </TouchableOpacity>
 
-                    </View>
-                }
+                        <TouchableOpacity onPress={() => {this.previous()}}>
+                            <Text style={{padding: 5}}>prev</Text>
+                        </TouchableOpacity>
+
+                        </View>
+                    }
+                </View>
 
                 <FlatList
+                    style={{marginRight: 10, marginLeft: 10}}
                     data={this.state.queue}
                     extraData={this.state}
                     keyExtractor={this.itemKeyExtractor}
