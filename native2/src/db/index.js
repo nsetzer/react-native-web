@@ -205,7 +205,6 @@ class ISqlDB extends React.Component {
 //});
 
 const mapStateToProps = state => {
-    console.log("load db: assigning props  " + !!state.sqldb.db)
     return {
         db: state.sqldb.db,
     }

@@ -192,7 +192,6 @@ export class LibraryPage extends React.Component {
                 track.url = env.baseUrl + "/api/library/" + song.uid + "/audio?token=" + token
             }
 
-            console.log(track)
             tracks.push(track)
 
         }

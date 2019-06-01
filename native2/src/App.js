@@ -11,6 +11,7 @@ import { AuthenticatedComponent, NotAuthenticatedComponent} from './common/compo
 import { ForestView } from './common/components/ForestView'
 
 import { SqlDB } from './db'
+import { AudioComponent } from './audio'
 
 import {env, libraryDomainInfo} from './common/api'
 
@@ -81,6 +82,7 @@ export default class App extends React.Component {
         return (
             <Provider store={store}>
             <SqlDB/>
+            <AudioComponent/>
             <View>
             <Router>
 

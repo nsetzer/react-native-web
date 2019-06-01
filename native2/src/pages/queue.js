@@ -6,6 +6,8 @@ import { connect } from "react-redux";
 
 import TrackPlayer from 'react-native-track-player';
 
+import { audioGetQueue } from '../audio'
+
 const styles = StyleSheet.create({
     footer: {
         height: 100,
@@ -84,21 +86,15 @@ class QueuePage extends React.Component {
     componentWillMount() {
 
 
+        //this.props.getQueue()
         this._getQueue()
 
-        TrackPlayer.addEventListener('playback-track-changed', (prevTrackId, prevPosition, nextTrackId) => {
-            this.setState({current_track_id: nextTrackId})
-        })
     }
 
     _getQueue() {
         TrackPlayer.getQueue().then(
             (tracks) => {
                 this.setState({queue: tracks})
-                TrackPlayer.getCurrentTrack().then(
-                    (uid) => {console.log('current: ' + uid); this.setState({current_track_id: uid})},
-                    (error) => {this.setState({current_track_id: null})},
-                )
             },
             (error) => {this.setState({queue: []})},
         )
@@ -108,7 +104,7 @@ class QueuePage extends React.Component {
 
         var track = this.state.queue[index];
 
-        if (this.state.current_track_id == track.id) {
+        if (this.props.current_track_id == track.id) {
             return
         }
 
@@ -136,7 +132,7 @@ class QueuePage extends React.Component {
 
         var track = this.state.queue[index];
 
-        if (this.state.current_track_id == track.id) {
+        if (this.props.current_track_id == track.id) {
             return
         }
 
@@ -163,23 +159,14 @@ class QueuePage extends React.Component {
 
         var track = this.state.queue[index];
 
-        if (this.state.current_track_id == track.id) {
+        if (this.props.current_track_id == track.id) {
             return
         }
 
         TrackPlayer.remove(track.id).then(
             () => {
 
-            TrackPlayer.getQueue().then(
-                (tracks) => {
-                    this.setState({queue: tracks})
-                    TrackPlayer.getCurrentTrack().then(
-                        (uid) => {this.setState({current_track_id: uid})},
-                        (error) => {this.setState({current_track_id: null})},
-                    )
-                },
-                (error) => {this.setState({queue: []})},
-            )
+            this._getQueue()
 
         })
 
@@ -194,7 +181,7 @@ class QueuePage extends React.Component {
             key={item.id}
             track={item}
             index={index}
-            isCurrent={this.state.current_track_id}
+            isCurrent={this.props.current_track_id}
             moveUp={this.moveUp.bind(this)}
             moveDown={this.moveDown.bind(this)}
             removeTrack={this.removeTrack.bind(this)}
@@ -212,10 +199,6 @@ class QueuePage extends React.Component {
     previous() {
         TrackPlayer.skipToPrevious().then(
             () => {
-                TrackPlayer.getCurrentTrack().then(
-                    (uid) => {this.setState({current_track_id: uid})},
-                    (error) => {this.setState({current_track_id: null})},
-                )
             },
             (error) => {console.log(error)},
         )
@@ -224,10 +207,6 @@ class QueuePage extends React.Component {
     next() {
         TrackPlayer.skipToNext().then(
             () => {
-                TrackPlayer.getCurrentTrack().then(
-                    (uid) => {this.setState({current_track_id: uid})},
-                    (error) => {this.setState({current_track_id: null})},
-                )
             },
             (error) => {console.log(error)},
         )
@@ -289,9 +268,13 @@ class QueuePage extends React.Component {
 
 const mapStateToProps = state => ({
     db: state.sqldb.db,
+    current_track_id: state.audio.current_track_id,
+    audio: state.audio
 });
 
 const bindActions = dispatch => ({
+    getQueue: () => {audioGetQueue(dispatch)},
+    getCurrentTrack: () => {audioGetCurrentTrack(dispatch)},
 });
 
 export default connect(mapStateToProps, bindActions)(QueuePage);
