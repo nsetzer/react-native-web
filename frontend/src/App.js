@@ -10,6 +10,7 @@ import LoginPage from './pages/login'
 import HomePage from './pages/home'
 import MainPage from './pages/main'
 import PublicFilePage from './pages/public_file'
+import Documentation from './pages/documentation'
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -76,6 +77,12 @@ export default class App extends React.Component {
                 <Route name='app-switch' path='/u/:path*'>
                     <AuthenticatedComponent redirect='/login'>
                         <MainPage />
+                    </AuthenticatedComponent>
+                </Route>
+
+                <Route name='app-switch' path='/doc'>
+                    <AuthenticatedComponent redirect='/login'>
+                        <Documentation />
                     </AuthenticatedComponent>
                 </Route>
 

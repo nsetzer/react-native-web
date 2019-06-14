@@ -137,3 +137,9 @@ export function storagePublicFileInfo(file_id) {
     const url = env.baseUrl + '/api/fs/public/' + file_id + serialize({info: true})
     return axios.get(url);
 }
+
+export function getCurlDocumentation() {
+    const url = env.baseUrl + '/api/doc'
+    const config = authConfig();
+    return axios.get(url, config);
+}

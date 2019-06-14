@@ -27,6 +27,8 @@ export const storageGeneratePublicUri = api.storageGeneratePublicUri
 export const storageRevokePublicUri = api.storageRevokePublicUri
 export const storagePublicFileInfo = api.storagePublicFileInfo
 
+export const getCurlDocumentation = api.getCurlDocumentation
+
 // ---------------------------------------
 
 function saveBlob(blob, fileName) {
