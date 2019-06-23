@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Text, TextInput, View } from "react-native";
+import { Text, TextInput, View, Platform } from "react-native";
 
 import { connect } from "react-redux";
 
@@ -22,16 +22,18 @@ export class Page1 extends React.Component {
 
         getCurlDocumentation().then(
             (response) => {this.setState({documentation: response.data})},
-            (error) => {this.setState({documentation: error})}
+            (error) => {this.setState({documentation: error.message})}
         )
     }
 
     render() {
 
+        const fontFamily = Platform.OS === 'ios' ? 'Courier' : 'monospace'
+
         return (
             <View>
 
-                <Text style={{padding: 5}}>{this.state.documentation}</Text>
+                <Text style={{padding: 5, fontFamily}}>{this.state.documentation}</Text>
 
             </View>
         )

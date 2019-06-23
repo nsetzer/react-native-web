@@ -16,7 +16,7 @@ import Page2 from './page2'
 import Page3 from './page3'
 import Page4 from './page4'
 import Page4Edit from './page4edit'
-import Page5 from './page5'
+import StoragePage from './storage'
 import QueuePage from './queue'
 
 import {SvgNowPlaying, SvgLibrary, SvgNotes, SvgStorage, SvgSettings, SvgLogout} from '../common/components/svg'
@@ -119,7 +119,7 @@ export class MainPage extends React.Component {
                 icon: {url: SvgLibrary, style: icon_style}
             },
             {
-                route: '/u/p5',
+                route: '/u/storage',
                 text: 'Storage',
                 icon: {url: SvgStorage, style: icon_style}
             },
@@ -184,15 +184,15 @@ export class MainPage extends React.Component {
                 }}></View>
 
                 <Switch redirect='/u/p1'>
-                    <Route name='main-switch' path='/u/p1'             ><Page1     /></Route>
-                    <Route name='main-switch' path='/u/p2'             ><Page2     /></Route>
-                    <Route name='main-switch' path='/u/p3'             ><Page3     /></Route>
-                    <Route name='main-switch' path='/u/p4'             ><Page4     /></Route>
-                    <Route name='main-switch' path='/u/p4/:uid'        ><Page4Edit /></Route>
-                    <Route name='main-switch' path='/u/p5'             ><Page5     /></Route>
-                    <Route name='main-switch' path='/u/p5/:root'       ><Page5     /></Route>
-                    <Route name='main-switch' path='/u/p5/:root/:path*'><Page5     /></Route>
-                    <Route name='main-switch' path='/u/queue'          ><QueuePage /></Route>
+                    <Route name='main-switch' path='/u/p1'             ><Page1       /></Route>
+                    <Route name='main-switch' path='/u/p2'             ><Page2       /></Route>
+                    <Route name='main-switch' path='/u/p3'             ><Page3       /></Route>
+                    <Route name='main-switch' path='/u/p4'             ><Page4       /></Route>
+                    <Route name='main-switch' path='/u/p4/:uid'        ><Page4Edit   /></Route>
+                    <Route name='main-switch' path='/u/storage'             ><StoragePage /></Route>
+                    <Route name='main-switch' path='/u/storage/:root'       ><StoragePage /></Route>
+                    <Route name='main-switch' path='/u/storage/:root/:path*'><StoragePage /></Route>
+                    <Route name='main-switch' path='/u/queue'          ><QueuePage   /></Route>
                 </Switch>
             </NavMenu>
             </View>

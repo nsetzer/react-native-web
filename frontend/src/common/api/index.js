@@ -15,6 +15,7 @@ export const saveNote = api.saveNote
 export const deleteNote = api.deleteNote
 
 export const fsGetPath = api.fsGetPath
+export const fsSearch = api.fsSearch
 
 export const libraryGetSong = api.libraryGetSong
 export const libraryDomainInfo = api.libraryDomainInfo

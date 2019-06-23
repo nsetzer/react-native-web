@@ -6,7 +6,7 @@ import { Animated, ScrollView, View, Text, TextInput, Button, FlatList, Touchabl
 import { connect } from "react-redux";
 import { setAuthenticated, pushLocation, initLocation } from '../redux/actions/routeAction'
 import { modalShow, modalHide } from '../redux/actions/modalAction'
-import { env, fsGetPath, downloadFile, uploadFile, storageRevokePublicUri, storageGeneratePublicUri } from '../common/api'
+import { env, fsGetPath, fsSearch, downloadFile, uploadFile, storageRevokePublicUri, storageGeneratePublicUri } from '../common/api'
 import { Switch, Route } from '../common/components/Route'
 
 import HyperLink from '../common/components/HyperLink'
@@ -64,6 +64,16 @@ const encryptionColorMap = {
     client: "#FFD700",
 }
 
+function dirpath(str, prefix="") {
+    if (str === null || str === undefined) {
+        return ""
+    }
+    if (!str) {
+        return prefix
+    }
+    return prefix + (new String(str).substring(0, str.lastIndexOf('/')))
+}
+
 function hasThumb(data) {
     var lst = data.name.split('.')
     var ext = lst[lst.length-1].toLowerCase()
@@ -118,19 +128,23 @@ class ModalDialog extends React.PureComponent {
 
 class FadeInView extends React.Component {
   state = {
-    fadeAnim: new Animated.Value(0),  // Initial value for opacity: 0
+    fadeAnim: 0,  // Initial value for opacity: 0
     visible: false
   }
 
   static getDerivedStateFromProps(nextProps, prevState) {
-    if (nextProps.visible) {
+    if (nextProps.visible && !prevState.visible) {
+        console.log("set timer")
+        var fadeAnim = new Animated.Value(0)
         Animated.timing(
-          prevState.fadeAnim,
+          fadeAnim,
           {
             toValue: nextProps.visible?1:0,
             duration: 500,
           }
         ).start(() => {nextProps.complete && nextProps.complete()});
+
+        return {visible: nextProps.visible, fadeAnim}
       }
     return {visible: nextProps.visible}
   }
@@ -244,6 +258,77 @@ class ListItem extends React.PureComponent {
         win.focus()
     }
 
+    render_icon_impl(url) {
+        if (!this.props.data.isDir && hasThumb(this.props.data)) {
+            return (<Image
+
+                        style={{
+                            borderColor: (encryptionColorMap[this.props.data.encryption] || '#000000'),
+                            borderWidth: 0,width: 80, height: 60}}
+                        source={{uri: url + "&preview=thumb&dl=0", headers: {Authorization: this.props.token}}}
+                    />);
+        } else {
+            return (<View style={{
+                            borderColor: (encryptionColorMap[this.props.data.encryption] || '#000000'),
+                            borderWidth: 0}}>
+                        <Svg
+                            src={this.props.data.isDir ? SvgFolder : SvgFile}
+                            style={{
+                                fill: '#F00000',
+                                borderColor: (encryptionColorMap[this.props.data.encryption] || '#000000'),
+                                borderWidth: 3,
+                                width: 80, height: 60}}/>
+                    </View>);
+        }
+    }
+
+    render_icon(url) {
+        return (<TouchableOpacity onPress={() => {
+                        this.props.modalShow(this.show_preview.bind(this))
+                    }}>
+                    {this.render_icon_impl(url)}
+                </TouchableOpacity>);
+    }
+
+    render_content(url) {
+        if (this.props.data.isDir) {
+            return (<TouchableOpacity
+                            onPress={() => {this.props.onPress(this.props.data)}}
+                            style={{flexGrow: 1, width: 0, padding: 10}}>
+                                <Text numberOfLines={1} ellipsizeMode='middle'>{this.props.data.name}</Text>
+                    </TouchableOpacity>);
+        } else {
+            // display the name of the file
+            // if part of a search, display the directory as well
+            return (<View style={{flexGrow: 1, width: 0, padding: 10}}>
+                        <Text numberOfLines={1} ellipsizeMode={'middle'}>{this.props.data.name}</Text>
+
+                        <TouchableOpacity
+                            onPress={() => {this.props.onPress(null, dirpath(this.props.dataPath, this.props.root + "/"))}}
+                            style={{flexGrow: 1}}>
+                            <Text numberOfLines={1} ellipsizeMode={'middle'}>{dirpath(this.props.dataPath, this.props.root + "/")}</Text>
+                        </TouchableOpacity>
+                    </View>);
+        }
+    }
+
+    render_more() {
+
+        if (!this.props.data.isDir) {
+            return (<View style={{marginLeft: 20, marginRight: 20}}>
+                        <TouchableOpacity onPress={() => {
+                            this.setState({expand: !this.state.expand})
+                        }}>
+                        <Svg
+                            src={SvgMore}
+                            style={{width: 32, height: 32}}/>
+                        </TouchableOpacity>
+                    </View>);
+        } else {
+            return null;
+        }
+    }
+
     render() {
         // TODO: fix how the token is passed
         //       some documentation metions it can be passed in as
@@ -273,57 +358,20 @@ class ListItem extends React.PureComponent {
                             width: 10}}>
                     </View>
 
-                <TouchableOpacity onPress={() => {
-                        this.props.modalShow(this.show_preview.bind(this))
-                    }}>
-                {!this.props.data.isDir && hasThumb(this.props.data)?
+                    {this.props.dataPath?<Text style={{padding: 10}}>{1+this.props.index}</Text>:null}
 
-                    <Image
-
-                        style={{
-                            borderColor: (encryptionColorMap[this.props.data.encryption] || '#000000'),
-                            borderWidth: 0,width: 80, height: 60}}
-                        source={{uri: url + "&preview=thumb&dl=0", headers: {Authorization: this.props.token}}}
-                    />:
-                    <View style={{
-                            borderColor: (encryptionColorMap[this.props.data.encryption] || '#000000'),
-                            borderWidth: 0}}>
-                    <Svg
-                        src={this.props.data.isDir ? SvgFolder : SvgFile}
-                        style={{
-                            fill: '#F00000',
-                            borderColor: (encryptionColorMap[this.props.data.encryption] || '#000000'),
-                            borderWidth: 3,
-                            width: 80, height: 60}}/></View>
-                }</TouchableOpacity>
+                    {this.render_icon(url)}
 
                     {/*for text ellipsis, width must be set.
                         set flexGrow to grow the container
                         set width to 0 to force the trait
                     */}
-                    {this.props.data.isDir?
-                        <TouchableOpacity
-                            onPress={() => {this.props.onPress(this.props.data)}}
-                            style={{flexGrow: 1, width: 0, padding: 10}}>
-                                <Text numberOfLines={1}>{this.props.data.name}</Text>
-                        </TouchableOpacity>:
-                        <View style={{flexGrow: 1, width: 0, padding: 10}}>
-                            <Text numberOfLines={1}>{this.props.data.name}</Text>
-                        </View>}
+                    {this.render_content(url)}
 
                     {/*extra margin on the right to improve scroll experience on mobile*/}
 
 
-                    {(!this.props.data.isDir)?
-                        <View style={{marginLeft: 20, marginRight: 20}}>
-                            <TouchableOpacity onPress={() => {
-                                this.setState({expand: !this.state.expand})
-                            }}>
-                            <Svg
-                                src={SvgMore}
-                                style={{width: 32, height: 32}}/>
-                            </TouchableOpacity>
-                        </View>:null}
+                    {this.render_more()}
 
                 </View>
 
@@ -342,6 +390,7 @@ class ListItem extends React.PureComponent {
                         </TouchableOpacity>
 
                         </View>
+                        <Text>Name: {this.props.data.name}</Text>
                         <Text>Version: {this.props.data.version}</Text>
                         <Text>Size: {Math.round(this.props.data.size/1024, 2)}KB</Text>
                         <Text>Encryption: {this.props.data.encryption||'none'}</Text>
@@ -387,7 +436,7 @@ function sortStrings(a, b) {
     return a.localeCompare(b)
 }
 
-export class Page5 extends React.Component {
+export class StoragePage extends React.Component {
 
     constructor(props) {
         super(props);
@@ -409,7 +458,10 @@ export class Page5 extends React.Component {
             editDialogVisible: false,
             newFolderName: "",
             uploadFiles: {},
-            showDialog: false
+            showDialog: false,
+            query: "",
+            active_query: null,
+            next_page: -1,
         }
         if (root !== undefined) {
            fsGetPath(this.state.root, this.state.path)
@@ -449,26 +501,69 @@ export class Page5 extends React.Component {
         return null;
     }
 
-
     componentDidMount() {
     }
 
     maybefetchContent() {
-       if (!this.state.loading && !this.state.loaded) {
-           if (this.state.root !== undefined) {
-               this.setState({'loading': true, loaded: false, directoryItems: [], })
+        if (!this.state.loading && !this.state.loaded) {
+            if (this.state.root !== undefined) {
 
-               // TODO: if root is 'public' use an alternative api to list
-               // only public files
-               fsGetPath(this.state.root, this.state.path)
-                   .then(this.onListDirSuccess.bind(this))
-                   .catch(this.onListDirError.bind(this));
-           }
-       }
+                const next_state = {
+                    'loading': true,
+                    loaded: false,
+                    directoryItems: [],
+                    next_page: -1
+                }
+
+                this.setState(next_state,
+                    () => {
+
+                       // TODO: if root is 'public' use an alternative api to list
+                       // only public files
+
+                        if (this.state.active_query !== null) {
+                            fsSearch(this.state.root,
+                                     this.state.path,
+                                     this.state.active_query, 0, 25)
+                            .then(this.onSearchSuccess.bind(this))
+                            .catch(this.onListDirError.bind(this));
+                        } else {
+                            fsGetPath(this.state.root, this.state.path)
+                            .then(this.onListDirSuccess.bind(this))
+                            .catch(this.onListDirError.bind(this));
+                        }
+
+                    })
+
+
+            }
+        }
     }
 
-    componentDidUpdate(prevState) {
-        this.maybefetchContent()
+    maybeLoadMore() {
+
+        if (this.state.next_page > -1 &&
+            this.state.loading === false &&
+            this.state.loaded === true) {
+
+            this.setState({'loading': false},
+                () => {
+
+                    fsSearch(this.state.root,
+                         this.state.path,
+                         this.state.active_query, this.state.next_page, 25)
+                    .then(this.onSearchSuccess.bind(this))
+                    .catch(this.onListDirError.bind(this));
+
+                })
+
+        }
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (prevProps.location != this.props.location) {
+            this.maybefetchContent()
+        }
     }
 
     onListDirSuccess(response) {
@@ -501,9 +596,55 @@ export class Page5 extends React.Component {
 
     }
 
+    onSearchSuccess(response) {
+        // validate that the current state matches the expected state
+        // when the function was fired
+        const obj = response.data.result
+
+        // obj.name == current root
+        // obj.parent == string representing parent path
+        // obj.path == string representing this path
+
+        const items = []
+
+        for (var i=0; i < obj.files.length; i++) {
+            items.push({...obj.files[i], isDir: false})
+        }
+
+        var next_page = -1
+        var directoryItems = []
+
+        var next_state = {
+            loading: false,
+            loaded: true
+        }
+
+        if (items.length == 0) {
+            // there is no more content to display
+            next_state['next_page'] = -1
+        }
+        else if (this.state.next_page === -1) {
+            // this is the first page of items
+            next_state['next_page'] = 1
+            next_state['directoryItems'] = items
+        }
+        else {
+            // this is new content to append
+            next_state['next_page'] = this.state.next_page + 1
+            next_state['directoryItems'] = this.state.directoryItems.concat(items)
+        }
+
+        // an incomplete page was returned
+        if (items.length < 25) {
+            next_state['next_page'] = -1
+        }
+
+        this.setState(next_state)
+    }
+
     rootKeyExtractor = (item, index) => item;
 
-    rootRenderItem = ({item}) => (
+    rootRenderItem = ({item, index}) => (
         <ListItemC
             data={{name:item.text, isDir:true}}
             onPress={(_) => {this.rootOnPress(item)}}
@@ -511,23 +652,39 @@ export class Page5 extends React.Component {
     );
 
     rootOnPress = (data) => {
-        this.props.pushLocation('/u/p5/' + data.name)
+        this.props.pushLocation('/u/storage/' + data.name)
     };
 
     itemKeyExtractor = (item, index) => item.name;
 
-    itemRenderItem = ({item}) => (
+    itemRenderItem = ({item, index}) => (
         <ListItemC
+            index={index}
             root={this.state.root}
             path={this.state.path}
             data={item}
+            dataPath={(this.state.active_query!==null)?item.file_path:null}
             onPress={this.itemOnPress}
         ></ListItemC>
     );
 
-    itemOnPress = (data) => {
+    itemOnPress = (data, dataPath) => {
 
-        if (data.isDir) {
+        if (data === null) {
+
+            var url = '/u/storage/' + dataPath
+
+            this.setState({active_query: null, loaded: false},
+                () => {
+                    this.props.pushLocation(url)
+                    // force a reload when the url is not going to change
+                    if (this.props.location == url) {
+                        this.maybefetchContent()
+                    }
+                })
+
+
+        } else if (data.isDir) {
             var url = this.props.location
 
             if (this.props.location.endsWith('/')) {
@@ -555,10 +712,10 @@ export class Page5 extends React.Component {
 
     goBack() {
         if (this.state.parentPath === this.state.path) {
-            this.props.pushLocation('/u/p5')
+            this.props.pushLocation('/u/storage')
 
         } else {
-            const url = '/u/p5/' + this.state.root + "/" + this.state.parentPath
+            const url = '/u/storage/' + this.state.root + "/" + this.state.parentPath
             this.props.pushLocation(url)
 
         }
@@ -610,8 +767,6 @@ export class Page5 extends React.Component {
           size: result.size,
           version:1
         }
-        console.log(result)
-        console.log(obj)
 
         const items = this.state.directoryItems
         var found = false
@@ -651,8 +806,28 @@ export class Page5 extends React.Component {
     }
 
     hideDialog() {
-        console.log("hide dialog")
         this.setState({showDialog: false})
+    }
+
+    search() {
+
+        var parts = this.state.query.split(/\s/).filter(p => p.length > 1)
+
+        if (parts.length > 0) {
+            var new_state = {active_query: parts, loaded: false}
+            this.setState(new_state,
+                () => {this.maybefetchContent()})
+        }
+
+
+    }
+
+    clear_search() {
+
+        var new_state = {active_query: null, loaded: false}
+        this.setState(new_state,
+            () => {this.maybefetchContent()})
+
     }
 
     render() {
@@ -683,6 +858,9 @@ export class Page5 extends React.Component {
             //              }}>
             //              <Text style={{padding: 5}}>Show Dialog</Text>
             //          </TouchableOpacity>
+
+            const bar_height = 96 // this.state.editDialogVisible?128:96
+
             return (
 
                 <View>
@@ -693,10 +871,14 @@ export class Page5 extends React.Component {
                     position: 'fixed',
                     backgroundColor: 'white',
                     top: 100,
-                    height: this.state.editDialogVisible?80:45,
+                    height: bar_height,
                     zIndex: 10,
                     width: '100%'}}>
 
+
+                    <Text style={{margin: 4}}>
+                    {'/' + this.state.path}
+                    </Text>
 
                     <View style={styles.buttonContainer}>
                         <TouchableOpacity
@@ -704,34 +886,33 @@ export class Page5 extends React.Component {
                             onPress={() => {this.goBack()}}>
                             <Text style={{padding: 10}}>Back</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity
-                            style={{marginRight: 5}}
-                            onPress={() => {this.onUploadClicked()}}>
-                            <Text style={{padding: 10}}>Upload</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={{marginRight: 5}}
-                            onPress={() => {
-                            this.setState({editDialogVisible: !this.state.editDialogVisible});
-                            }}>
-                            <Text style={{padding: 10}}>New Directory</Text>
-                        </TouchableOpacity>
+                        {this.state.active_query?null:
+                            <TouchableOpacity
+                                style={{marginRight: 5}}
+                                onPress={() => {this.onUploadClicked()}}>
+                                <Text style={{padding: 10}}>Upload</Text>
+                            </TouchableOpacity>}
+                        {this.state.active_query?null:
+                            <TouchableOpacity
+                                style={{marginRight: 5}}
+                                onPress={() => {
+                                this.setState({editDialogVisible: !this.state.editDialogVisible});
+                                }}>
+                                <Text style={{padding: 10}}>New Directory</Text>
+                            </TouchableOpacity>}
 
                     </View>
 
+
                     <FadeInView
                       visible={this.state.editDialogVisible}
-                      complete={() => this.newFolderInput.focus()}>
+                      complete={() => {this.newFolderInput && this.newFolderInput.focus()}}>
 
                       <View>
                         <View style={[styles.listItemRow, {justifyContent: 'space-between'}]}>
-                          <TextInput
-                            ref={(input) => {this.newFolderInput = input}}
-                            placeholder="New Folder"
-                            style={{padding: 5, margin: 5, borderWidth: 1, borderColor: 'black', flexGrow: 2}}
-                            onChangeText={(text) => {this.setState({newFolderName: text})}} />
 
-                          <View style={[styles.listItemRow, {justifyContent: 'space-between'}]}>
+
+                          <View style={[styles.listItemRow, {justifyContent: 'space-between', flexGrow: 1}]}>
                           <TouchableOpacity
                             onPress={() => {
                               this.onCreateFolder(this.state.newFolderName)
@@ -745,13 +926,57 @@ export class Page5 extends React.Component {
                             }}>
                             <Text style={{padding: 5, margin: 5}}>Cancel</Text>
                           </TouchableOpacity>
+
+                          <TextInput
+                            ref={(input) => {this.newFolderInput = input}}
+                            placeholder="New Folder"
+                            style={{padding: 5, margin: 5, borderWidth: 1, borderColor: 'black', flexGrow: 1}}
+                            onChangeText={(text) => {this.setState({newFolderName: text})}} />
+
                           </View>
+
                         </View>
                       </View>
                     </FadeInView>
 
+                    {/*
+                        TODO: hide this view when the create direc
+                    */}
+                    <FadeInView
+                      visible={!this.state.editDialogVisible}
+                      >
+                    <View style={styles.buttonContainer}>
 
-                    <View>
+                        <TouchableOpacity onPress={() => {this.search()}}>
+                            <Text style={{padding: 0, margin: 10}}>Search</Text>
+                        </TouchableOpacity>
+                        {(this.state.active_query !== null)?
+                            <TouchableOpacity onPress={() => {this.clear_search()}}>
+                                <Text style={{padding: 0, margin: 10}}>Clear</Text>
+                            </TouchableOpacity>: null}
+
+                        <TextInput
+                            placeholder="Search Directory"
+                            style={{borderWidth: 1, borderColor: '#000000', width: 100, margin: 5, flexGrow: 1}}
+                            onChangeText={(query) => this.setState({query})}
+                        />
+
+
+                    </View>
+                    </FadeInView>
+
+
+                </View>
+
+                <View>
+
+                <View style={{
+                    backgroundColor: 'white',
+                    height: bar_height,
+                    width: '100%'}}>
+                </View>
+
+                <View>
                     {Object.keys(this.state.uploadFiles).sort(sortStrings).map(
                         (item, index) => {
                             const obj = this.state.uploadFiles[item]
@@ -759,16 +984,8 @@ export class Page5 extends React.Component {
                             return <Text style={{backgroundColor: "#00FF0055", margin: 5}}>Uploading {obj.fileName} ... {pct} % </Text>
                         }
                     )}
-                    </View>
                 </View>
 
-                <View>
-
-                <View style={{
-                    backgroundColor: 'white',
-                    height: this.state.editDialogVisible?80:45,
-                    width: '100%'}}>
-                </View>
                 {this.state.loading?<Text>loading...</Text>:
                     <FlatList
                         data={this.state.directoryItems}
@@ -776,6 +993,7 @@ export class Page5 extends React.Component {
                         keyExtractor={this.itemKeyExtractor}
                         renderItem={this.itemRenderItem.bind(this)}
                         ListFooterComponent={ListFooter}
+                        onEndReached={this.maybeLoadMore.bind(this)}
                         />}
                 </View>
                 </View>
@@ -799,4 +1017,4 @@ const bindActions = dispatch => ({
     }
 });
 
-export default connect(mapStateToProps, bindActions)(Page5);
+export default connect(mapStateToProps, bindActions)(StoragePage);

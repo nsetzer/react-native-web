@@ -11,7 +11,6 @@ import { Switch, Route } from '../common/components/Route'
 import { Markdown } from '../common/components/markdown'
 import { Svg, SvgEdit, SvgDiscard } from '../common/components/svg'
 
-console.error(" *** SVG IS  " + Svg)
 const styles = StyleSheet.create({
   listItemContainer: {
     padding: 10,

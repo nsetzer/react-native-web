@@ -83,6 +83,14 @@ export function fsGetPath(root, path) {
     return axios.get(url, config);
 }
 
+export function fsSearch(root, path, terms, page) {
+    const params = {path, terms, page, limit: 50}
+    const url = env.baseUrl + '/api/fs/' + root +'/search' + serialize(params)
+    console.log(url)
+    const config = authConfig();
+    return axios.get(url, config);
+}
+
 
 export function libraryGetSong(song_id) {
     const url = env.baseUrl + '/api/library/' + song_id
@@ -139,7 +147,7 @@ export function storagePublicFileInfo(file_id) {
 }
 
 export function getCurlDocumentation() {
-    const url = env.baseUrl + '/api/doc'
+    const url = env.baseUrl + '/api/doc' + serialize({hostname: env.baseUrl})
     const config = authConfig();
     return axios.get(url, config);
 }
