@@ -8,6 +8,7 @@ import {routeReducer} from '../../common/components/Route';
 import {authReducer} from '../../common/components/Auth';
 import {sqldbReducer} from '../../db';
 import {audioReducer} from '../../audio';
+import {syncReducer} from '../../pages/download';
 
 
 // the name here is used as the top level key
@@ -20,6 +21,7 @@ const reducers = {
     auth: authReducer,
     sqldb: sqldbReducer,
     audio: audioReducer,
+    sync: syncReducer,
 };
 
 export default combineReducers(reducers)

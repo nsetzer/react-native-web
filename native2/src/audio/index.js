@@ -3,6 +3,8 @@ import React from 'react';
 import { Text, View, StyleSheet, FlatList, TouchableOpacity } from "react-native";
 import { connect } from "react-redux";
 
+import AsyncStorage from '@react-native-community/async-storage'
+
 import TrackPlayer from 'react-native-track-player';
 
 export const AUDIO_SET_QUEUE_ACTION = "AUDIO_SET_QUEUE_ACTION"
@@ -37,6 +39,31 @@ export function audioGetCurrentTrack(dispatch) {
     )
 }
 
+export function audioSaveQueue(index, tracks, options=null) {
+
+    return new Promise(async resolve => {
+
+        var obj = {index, tracks, options}
+        var str = JSON.stringify(obj)
+
+        console.log(str)
+        await AsyncStorage.setItem('yue-audio-queue', str)
+
+        return true;
+    });
+}
+
+export function audioLoadQueue() {
+
+    return new Promise(async resolve => {
+        const str = await AsyncStorage.getItem('yue-audio-queue')
+        console.log(str)
+        var obj = JSON.parse(str.replace("undefined", "null"))
+        console.log(obj)
+        resolve(obj)
+    });
+}
+
 const INITIAL_STATE = {
     queue: [],
     current_track_id: null,
@@ -48,15 +75,14 @@ export function audioReducer(state = INITIAL_STATE, action = {}) {
     switch(action.type) {
 
         case AUDIO_SET_QUEUE_ACTION:
-            console.log("QUEUE: set queue")
+            console.log("QUEUE: set queue " + action.tracks.length)
             return {
                 ...state,
                 queue: action.tracks
             }
 
         case AUDIO_SET_CURRENT_TRACK:
-            console.log("QUEUE: set track")
-            console.log(action)
+
             var idx = -1;
             for (var i=0; i < state.queue.length; i++) {
                 if (state.queue[i].id === action.uid) {
@@ -68,6 +94,9 @@ export function audioReducer(state = INITIAL_STATE, action = {}) {
             if (idx >= 0 && idx < state.queue.length) {
                 track = state.queue[idx]
             }
+            console.log("QUEUE: set track: " + idx + "/" + state.queue.length)
+            console.log(action)
+            console.log(track)
             return {
                 ...state,
                 current_track_id: action.uid,
@@ -89,30 +118,61 @@ class IAudioComponent extends React.Component {
     componentWillMount() {
 
         console.log("QUEUE: set up")
-        TrackPlayer.setupPlayer({}).then(() => {
 
-            TrackPlayer.updateOptions({
-                capabilities: [
-                    TrackPlayer.CAPABILITY_PLAY,
-                    TrackPlayer.CAPABILITY_PAUSE,
-                    TrackPlayer.CAPABILITY_PLAY_FROM_SEARCH,
-                    TrackPlayer.CAPABILITY_SKIP,
-                    TrackPlayer.CAPABILITY_SKIP_TO_NEXT,
-                    TrackPlayer.CAPABILITY_SKIP_TO_PREVIOUS,
-                ],
-            });
+        TrackPlayer.getQueue().then(
+            (tracks) => {
 
+                console.log("audio: on initial load " + tracks.length)
 
-            TrackPlayer.addEventListener('playback-track-changed', (obj) => {
-                this.props.setCurrentTrack(obj.nextTrack)
-            })
+                if (tracks.length == 0) {
+                    TrackPlayer.setupPlayer({}).then(
+                        () => {
+                            this._init_main()
+                            this._init_secondary()
+                        },
+                        (error) => {console.log(error)}
+                    );
+                } else {
+                    this._init_main()
+                    //this.props.getQueue()
+                    this.props.getCurrentTrack()
+                }
+            },
+            (error) => {console.log(error)}
+        );
 
-            this.props.getQueue()
-            this.props.getCurrentTrack()
+    }
 
-        },
-        (error) => {console.log(error)});
+    _init_main() {
+        TrackPlayer.updateOptions({
+            capabilities: [
+                TrackPlayer.CAPABILITY_PLAY,
+                TrackPlayer.CAPABILITY_PAUSE,
+                TrackPlayer.CAPABILITY_SKIP_TO_NEXT,
+                TrackPlayer.CAPABILITY_SKIP_TO_PREVIOUS,
+            ],
+            compactCapabilities: [
+              TrackPlayer.CAPABILITY_PLAY,
+              TrackPlayer.CAPABILITY_PAUSE,
+            ]
+        });
 
+        TrackPlayer.addEventListener('playback-track-changed', (obj) => {
+            this.props.setCurrentTrack(obj.nextTrack)
+        })
+    }
+
+    _init_secondary() {
+        audioLoadQueue().then(
+            async (obj) => {
+                await TrackPlayer.reset()
+                await TrackPlayer.add(obj.tracks);
+                await TrackPlayer.skip(obj.options.current_track_id);
+            },
+            (error) => {
+
+            }
+        );
     }
 
     render() {

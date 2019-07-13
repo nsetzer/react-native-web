@@ -3,6 +3,7 @@ package com.native2;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
+import com.reactnativecommunity.asyncstorage.AsyncStoragePackage;
 import com.guichaguri.trackplayer.TrackPlayer;
 import com.RNFetchBlob.RNFetchBlobPackage;
 import com.meedan.ShareMenuPackage;
@@ -30,6 +31,7 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
+            new AsyncStoragePackage(),
           new TrackPlayer(),
           new RNFetchBlobPackage(),
           new ShareMenuPackage(),

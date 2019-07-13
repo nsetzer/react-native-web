@@ -22,6 +22,7 @@ import NowPlayingPage from './nowplaying'
 import StoragePage from './storage'
 import SettingsPage from './settings'
 import QueuePage from './queue'
+import { DownloadComponent } from './download'
 
 const icon_style = {
     width: 48,
@@ -131,6 +132,7 @@ class MainPage extends React.Component {
                         stickyHeaderIndices={[0]}
                         showsVerticalScrollIndicator={false}>
                         <Header onPress={this.onPress.bind(this)}/>
+                        <DownloadComponent />
 
                         <Switch redirect='/u/nowplaying'>
                             <Route name='main-switch' path='/u/nowplaying'><NowPlayingPage/></Route>

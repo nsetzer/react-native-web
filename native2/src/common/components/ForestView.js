@@ -6,7 +6,7 @@ import CheckBox from './CheckBox'
 
 // todo selection mode CHECK or HIGHLIGHT
 
-const boxWidth = 15;
+const boxWidth = 32;
 
 const styles = StyleSheet.create({
     footer: {
@@ -218,7 +218,12 @@ export class TreeCard extends React.Component {
         if (this.props.selected === undefined) {
             return true
         }
+
         if (this.props.expanded === undefined) {
+            return true
+        }
+
+        if (this.props.data !== nextProps.data) {
             return true
         }
 

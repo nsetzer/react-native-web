@@ -1,12 +1,23 @@
 
 
+
+/*
+
+on sync pressed -> show message and when complete clear message start download
+hide sync button until changes have been made
+    a new search resets the state
+
+*/
 import React from 'react';
-import { Text, View, TouchableOpacity, PermissionsAndroid } from "react-native";
+import { Text, View, TouchableOpacity, TextInput } from "react-native";
 import { connect } from "react-redux";
 
-import { env, librarySearch, authenticate, downloadFile, dirs, authConfig } from '../common/api';
+import { env, librarySearch, authenticate } from '../common/api';
 import { setConfig } from '../config';
 import ForestView from '../common/components/ForestView';
+
+import { syncInitAction } from './download'
+
 
 import TrackPlayer from 'react-native-track-player';
 
@@ -39,6 +50,10 @@ function hashSchema(schema) {
     return hashArray(schema)
 }
 
+function trim(s)
+{
+    return String(s).replace(/^\s+|\s+$/g, '');
+};
 /*
     unused columns from librarySearch API
     art_path: should not be in response
@@ -50,7 +65,6 @@ function hashSchema(schema) {
     file_size: not useful
     frequency: not useful
 */
-
 
 function remoteSongToLocalSong(song) {
 
@@ -80,63 +94,6 @@ function remoteSongToLocalSong(song) {
     }
 }
 
-const dbSchema = [
-    {
-        name: 'users',
-        columns: [
-            {name: "spk",        type: "INTEGER PRIMARY KEY AUTOINCREMENT", },
-            {name: "uid",        type: "VARCHAR", },
-            {name: "username",   type: "VARCHAR", },
-            {name: "apikey",     type: "VARCHAR", },
-        ]
-    },
-    {
-        name: 'songs',
-        columns: [
-            {name: "spk",        type: "INTEGER PRIMARY KEY AUTOINCREMENT", },
-            {name: "uid",        type: "VARCHAR UNIQUE", },
-            {name: "user_id",    type: "VARCHAR NOT NULL", },
-
-            {name: "sync",       type: "INTEGER DEFAULT 0", }, // download this resource
-            {name: "synced",     type: "INTEGER DEFAULT 0", }, // resource has been downloaded
-
-            {name: "artist",     type: "VARCHAR NOT NULL", },
-            {name: "artist_key", type: "VARCHAR", },
-            {name: "album",      type: "VARCHAR NOT NULL", },
-            {name: "title",      type: "VARCHAR NOT NULL", },
-            {name: "composer",   type: "VARCHAR", },
-            {name: "comment",    type: "VARCHAR", },
-            {name: "country",    type: "VARCHAR", },
-            {name: "language",   type: "VARCHAR", },
-            {name: "genre",      type: "VARCHAR", },
-
-            {name: "file_path",      type: "VARCHAR", },
-            {name: "art_path",      type: "VARCHAR", },
-
-            {name: "play_count",  type: "INTEGER DEFAULT 0", },
-            {name: "skip_count",  type: "INTEGER DEFAULT 0", },
-            {name: "album_index",     type: "INTEGER DEFAULT 0", },
-            {name: "year",     type: "INTEGER DEFAULT 0", },
-            {name: "length",     type: "INTEGER DEFAULT 0", },
-            {name: "rating",     type: "INTEGER DEFAULT 0", },
-
-            {name: "date_added",     type: "INTEGER DEFAULT 0", },
-            {name: "last_played",     type: "INTEGER DEFAULT 0", },
-
-        ]
-    },
-    {
-        name: 'history',
-        columns: [
-            {name: "spk",        type: "INTEGER PRIMARY KEY AUTOINCREMENT", },
-            {name: "song_id",       type: "VARCHAR", },
-            {name: "user_id",       type: "VARCHAR", },
-            {name: "timestamp",     type: "INTEGER", },
-        ]
-    },
-]
-
-
 export class SyncPage extends React.Component {
 
     constructor(props) {
@@ -147,12 +104,7 @@ export class SyncPage extends React.Component {
             data: {},     // search results formatted for a forest
             raw_data: {}, // search results
             defaultSelected: {},
-            isDownloading: false,
-            progress: null,
-            dlsongs: null,
-            dlindex: 0,
-            dlcount: 0,
-            dlalive: true,
+            searchText: "",
         }
     }
 
@@ -396,7 +348,29 @@ export class SyncPage extends React.Component {
 
     async _search() {
 
-        result = await this.props.db.execute("SELECT uid, artist, album, title, sync, synced from songs ORDER BY artist_key, album, title ASC", [])
+        var items = this.state.searchText.split().map(s => trim(s)).filter(s => s);
+        var cols = ['artist', 'album', 'title', 'comment']
+
+        var rule = items.map(s => ('(' + cols.map(c => (c + ' LIKE ?')).join(' OR ') + ')')).join(' AND ')
+        var params = []
+        for (var i=0; i < items.length; i++) {
+            for (var j=0; j < cols.length; j++) {
+                params.push('%' + items[i] + '%')
+            }
+        }
+
+        var clause
+        if (items.length > 0) {
+            clause = "WHERE (" + rule + ")"
+        } else {
+            clause = ""
+        }
+
+        console.log(clause)
+
+        var cols_select = "uid, artist, album, title, sync, synced"
+        var result = await this.props.db.execute("SELECT " + cols_select + " FROM songs " +
+            clause + " ORDER BY artist_key, album, title ASC", params)
 
         data = {}
         raw_data = {}
@@ -421,54 +395,6 @@ export class SyncPage extends React.Component {
             }
 
         }
-
-        //console.log(selected)
-        //await this.refs.forest.setSelection(selected, (item) => {item.uid})
-
-        /*
-        data = []
-        raw_data = {}
-        var nextId = 0
-        var previousArtist = null;
-        var previousAlbum = null;
-        var albumParentIndex = -1
-        var songParentIndex = -1
-
-        for (var i=0; i < result.rows.length; i++) {
-            var item = result.rows.item(i);
-
-            raw_data[item.uid] = item
-
-            if (item.artist != previousArtist) {
-                previousArtist = item.artist
-                data.push(this.refs.forest.createNode(nextId.toString(), null, 0, item.artist, null))
-                albumParentIndex = data.length - 1
-                nextId += 1
-
-                previousAlbum = item.album
-                data.push(this.refs.forest.createNode(nextId.toString(), null, 1, item.album, albumParentIndex))
-                songParentIndex = data.length - 1
-                nextId += 1
-
-                data[albumParentIndex].addChildIndex(songParentIndex)
-
-            } else if (item.album != previousAlbum) {
-
-                previousAlbum = item.album
-                data.push(this.refs.forest.createNode(nextId.toString(), null, 1, item.album, albumParentIndex))
-                songParentIndex = data.length - 1
-                nextId += 1
-
-                data[albumParentIndex].addChildIndex(songParentIndex)
-            }
-
-
-            data.push(this.refs.forest.createNode(item.uid, item, 2, item.title, songParentIndex))
-            data[songParentIndex].addChildIndex(data.length - 1)
-
-        }
-
-        */
 
         this.setState({data, raw_data, defaultSelected: selected})
     }
@@ -518,230 +444,12 @@ export class SyncPage extends React.Component {
             await this.props.db.t.songs.update({uid: key}, {sync: update_items[key]})
 
         }
-    }
 
-    // Note: downloading songs is broken into multiple phases
-    // the end of each phase calls setState, using the callback
-    // to delay the start of the next phase until the state is updated.
-    // each phase is separated by when the state needs to be updated
+        this.props.syncInitAction()
+    }
 
     startDownload() {
-
-        if (!this.state.isDownloading) {
-            this.setState({isDownloading: true, dlalive: true}, () => {
-
-                this._doDownloadInit().then(
-                    (result) => {},
-                    (error) => {this.setState({isDownloading: false}); console.log(error)}
-                )
-            })
-        }
-    }
-
-    async requestStoragePermission() {
-        try {
-            /*
-            const granted = await PermissionsAndroid.request(
-                PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-                {
-                title: 'Cool Photo App Camera Permission',
-                message:
-                    'Cool Photo App needs access to your camera ' +
-                    'so you can take awesome pictures.',
-                buttonNeutral: 'Ask Me Later',
-                buttonNegative: 'Cancel',
-                buttonPositive: 'OK',
-                },
-            );
-            */
-            const result = await PermissionsAndroid.requestMultiple([
-                PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-                PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE])
-            console.log(result)
-
-            const granted = result[PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE]
-
-            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-                return true;
-            } else {
-                return false;
-            }
-        } catch (err) {
-            console.warn(err);
-        }
-    }
-
-    async _doDownloadInit() {
-
-        var cont = await this.requestStoragePermission()
-        if (!cont) {
-            return
-        }
-
-        // TODO: auth parameters should come from redux store...
-        setConfig()
-        var cfg = authConfig()
-        const response = await authenticate(cfg.auth.username, cfg.auth.password)
-        var token = response.data.token
-
-        result = await this.props.db.execute("SELECT uid, sync, synced, artist, album, title, album_index from songs WHERE sync == 1", [])
-
-        var filename
-        var dlsongs = []
-        for (var i=0; i < result.rows.length; i++) {
-            var item = result.rows.item(i);
-
-            if (item.sync && item.sync != item.synced) {
-
-                    file_name = ((item.album_index!==null)?item.album_index + "_":'') +
-                        item.title + "." + item.uid.substring(0, 8) +".ogg"
-
-                    file_name = file_name.replace(/\s/g, '_')
-                    file_name = file_name.replace(/[\?\'\"\\\/\[\]\(\)]/g, '')
-                    file_name = item.artist + "/" + item.album + "/" + file_name
-
-                    url = env.baseUrl + "/api/library/" + item.uid + "/audio"
-                    headers = {'Authorization': token}
-                    params = {location:  dirs.MusicDir + "/yue/" + file_name}
-
-                    dlsongs.push({
-                        url, headers, params, metadata: item
-                    })
-            }
-
-        }
-
-        console.log("download: starting main sequence")
-        if (dlsongs.length > 0) {
-            this.setState({dlsongs, dlindex:0, dlcount: dlsongs.length}, () => {
-                this._doDownloadMain().then(
-                        (result) => {},
-                        (error) => {console.log(error)}
-                    )
-            })
-        } else {
-            this.setState({isDownloading: false})
-            console.log("download complete")
-        }
-    }
-
-    async _doDownloadMain() {
-
-        if (!this.state.dlalive) {
-            console.log("download terminate")
-            this.setState({isDownloading: false})
-            return
-        }
-
-        var {dlsongs, dlindex} = this.state
-
-        var song = dlsongs[dlindex]
-
-        try {
-            var f_obj = await this._doDownloadOne(song.url, song.params, song.headers)
-
-            var length = f_obj.info().headers['Content-Length']
-
-            await this.props.db.t.songs.update({uid: song.metadata.uid}, {
-                synced: true,
-                file_path: params.location,
-                file_size: (length>0)?length:null,
-            })
-
-        } catch (error) {
-            console.log("failed to download: ")
-            console.log(song)
-            console.log("HERE COMES THE ERROR")
-            console.log(error)
-        }
-
-        dlindex+=1
-        if (dlindex < dlsongs.length) {
-            this.setState({dlindex}, () => {
-                this._doDownloadMain().then(
-                        (result) => {},
-                        (error) => {console.log(error)}
-                    )
-            })
-        } else {
-            this.setState({isDownloading: false})
-            console.log("download complete")
-        }
-    }
-
-    async _doDownloadOne(url, params, headers) {
-        return await new Promise((resolve, reject) => {
-            downloadFile(url, headers, params,
-                resolve, reject, (progress) => {
-                    this.setState({progress})
-                })
-        })
-    }
-
-    play() {
-        this._play().then(
-            (result) => {console.log("sync complete")},
-            (error) => {console.error(error)}
-        )
-    }
-
-    async _play() {
-
-        var result = await this.props.db.execute("SELECT uid, artist, album, title, file_path, art_path, length from songs WHERE synced == 1 LIMIT 1", [])
-
-        if (result.rows.length < 0) {
-            return
-        }
-
-        var track = result.rows.item(0)
-
-        //await TrackPlayer.setupPlayer({})
-
-        /*
-        TrackPlayer.addEventListener("remote-play", () => {console.log("on play")})
-
-        TrackPlayer.addEventListener("remote-pause", () => {console.log("on pause")})
-        TrackPlayer.addEventListener("remote-stop", () => {console.log("on stop")})
-        //"remote-skip", (track_id) => {}
-        TrackPlayer.addEventListener("remote-next", () => {console.log("on next")})
-        TrackPlayer.addEventListener("remote-previous", () => {console.log("on prev")})
-        // paused/ducking set to true: pause
-        // permanent set to true: stop
-        // if all 3 are false reset to original state
-        TrackPlayer.addEventListener("remote-duck", (paused, permanent, ducking) => {console.log("on duck")})
-
-        TrackPlayer.addEventListener("playback-state", (state) => {console.log("on new state:" + state)})
-        TrackPlayer.addEventListener("playback-queue-ended", (track, position) => {console.log("on queue end")})
-        TrackPlayer.addEventListener("playback-error", (error, message) => {console.log("on error: " + message)})
-        */
-        console.log(track)
-
-        // Adds a track to the queue
-        await TrackPlayer.add({
-            id: track.uid,
-            url: track.file_path,
-            title: track.title,
-            artist: track.artist,
-            album: track.album,
-            duration: track.length,
-            //artwork: ''
-        });
-
-        // Starts playing it
-        TrackPlayer.play();
-
-    }
-
-    pause() {
-        this._pause().then(
-            (result) => {console.log("sync complete")},
-            (error) => {console.error(error)}
-        )
-    }
-
-    async _pause() {
-        TrackPlayer.pause();
-
+        this.props.syncInitAction()
     }
 
     expandToggle() {
@@ -760,9 +468,13 @@ export class SyncPage extends React.Component {
 
     render() {
 
-                    //<TouchableOpacity onPress={() => {this.insertRow()}}>
-                    //    <Text style={{padding: 5}}>Insert</Text>
-                    //</TouchableOpacity>
+        //<TouchableOpacity onPress={() => {this.insertRow()}}>
+        //    <Text style={{padding: 5}}>Insert</Text>
+        //</TouchableOpacity>
+
+        //<TouchableOpacity onPress={() => {this.expandToggle()}}>
+        //    <Text style={{padding: 5}}>Expand All</Text>
+        //</TouchableOpacity>
 
         return (
             <View style={{
@@ -771,6 +483,13 @@ export class SyncPage extends React.Component {
                 justifyContent: 'center',
                 height:'100%'
             }}>
+                <TextInput
+                    ref='editSearch'
+                    style={{flexGrow: 1, borderWidth: 1, borderColor: 'black', width: "100%"}}
+                    onChangeText={(text) => this.setState({searchText: text})}
+                    onSubmitEditing={() => {this.search()}}
+                    />
+
                 {!this.props.db?<Text>error loading db</Text>:
                     <View style={{
                         flex:1,
@@ -781,14 +500,11 @@ export class SyncPage extends React.Component {
                         <Text style={{padding: 5}}>Fetch</Text>
                     </TouchableOpacity>
 
-
                     <TouchableOpacity onPress={() => {this.search()}}>
                         <Text style={{padding: 5}}>Search</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity onPress={() => {this.expandToggle()}}>
-                        <Text style={{padding: 5}}>Expand All</Text>
-                    </TouchableOpacity>
+
 
                     <TouchableOpacity onPress={() => {this.selectToggle()}}>
                         <Text style={{padding: 5}}>Select All</Text>
@@ -805,51 +521,12 @@ export class SyncPage extends React.Component {
                     </View>
                 }
 
-                {!this.props.db?<Text>error loading db</Text>:
-                    <View style={{
-                        flex:1,
-                        flexDirection: 'row',
-                    }}>
-
-                    <TouchableOpacity onPress={() => {this.play()}}>
-                        <Text style={{padding: 5}}>play</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity onPress={() => {this.pause()}}>
-                        <Text style={{padding: 5}}>pause</Text>
-                    </TouchableOpacity>
-
-                    </View>
-                }
-
-                {!this.state.isDownloading?null:
-                    <View style={{
-                        flex:1,
-                        alignItems:'center',
-                        justifyContent: 'center',
-                        height:'100%'
-                    }}>
-
-                    {this.state.dlalive?
-                        <TouchableOpacity onPress={() => {this.setState({dlalive: false})}}>
-                            <Text style={{padding: 5}}>Stop Download</Text>
-                        </TouchableOpacity>:
-                        <Text style={{padding: 5}}>Stopping Download...</Text>}
-
-                    {this.state.dlcount>0?
-                        <Text>{1+this.state.dlindex}/{this.state.dlcount}: {
-                            this.state.dlsongs[this.state.dlindex].metadata.artist} - {
-                            this.state.dlsongs[this.state.dlindex].metadata.title} - {
-                            this.state.progress?(Math.round(100*this.state.progress.bytesTransfered/this.state.progress.fileSize)):0}%</Text>:null}
-
-                    </View>
-                }
                 <ForestView
                     ref='forest'
                     data={this.state.data}
                     selected={this.state.defaultSelected}
                     itemKeyExtractor={(item) => item.uid}
-                    highlightMode="check"/>
+                    highlightMode="row"/>
 
             </View>
         );
@@ -861,6 +538,7 @@ const mapStateToProps = state => ({
 });
 
 const bindActions = dispatch => ({
+    syncInitAction: () => {dispatch(syncInitAction())},
 });
 
 export default connect(mapStateToProps, bindActions)(SyncPage);

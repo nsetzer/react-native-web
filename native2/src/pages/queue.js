@@ -1,12 +1,12 @@
 
 
 import React from 'react';
-import { Text, View, StyleSheet, FlatList, TouchableOpacity } from "react-native";
+import { Text, View, StyleSheet, FlatList, TouchableOpacity, AsyncStorage} from "react-native";
 import { connect } from "react-redux";
 
 import TrackPlayer from 'react-native-track-player';
 
-import { audioGetQueue } from '../audio'
+import { audioGetQueue, audioSaveQueue } from '../audio'
 
 const styles = StyleSheet.create({
     footer: {
@@ -79,24 +79,40 @@ class QueuePage extends React.Component {
 
         this.state = {
             queue: [],
+            queue_dirty: true,
             current_track_id: null
         }
     }
 
     componentWillMount() {
 
-
         //this.props.getQueue()
+        console.log("queue page: on mount")
         this._getQueue()
 
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+
+        if (prevProps.current_track_id != prevState.current_track_id) {
+            console.log("queue page: props demand updates")
+            this.setState({
+                current_track_id: prevProps.current_track_id,
+                queue_dirty: true
+            })
+        }
     }
 
     _getQueue() {
         TrackPlayer.getQueue().then(
             (tracks) => {
+                console.log("queue page: fetched queue")
                 this.setState({queue: tracks})
             },
-            (error) => {this.setState({queue: []})},
+            (error) => {
+                console.log("queue page: error fetching queue")
+                this.setState({queue: []})
+            },
         )
     }
 
@@ -126,6 +142,7 @@ class QueuePage extends React.Component {
             (error) => {console.log(error)}
         )
 
+        this.setState({'queue_dirty': true})
     }
 
     moveDown(index) {
@@ -153,6 +170,7 @@ class QueuePage extends React.Component {
             (error) => {console.log(error)}
         )
 
+        this.setState({'queue_dirty': true})
     }
 
     removeTrack(index) {
@@ -170,8 +188,7 @@ class QueuePage extends React.Component {
 
         })
 
-
-
+        this.setState({'queue_dirty': true})
     }
 
     itemKeyExtractor = (item, index) => item.id;
@@ -190,15 +207,62 @@ class QueuePage extends React.Component {
 
     play() {
         TrackPlayer.play();
+
+        TrackPlayer.updateOptions({
+            stopWithApp: false,
+        })
     }
 
     pause() {
         TrackPlayer.pause();
+
+        console.log("queue page: enable stop with app")
+        TrackPlayer.updateOptions({
+            stopWithApp: true,
+        })
+
+        console.log(this.state.queue_dirty)
+
+        if (this.state.queue_dirty) {
+            this.setState({queue_dirty: false}, () => {
+                audioSaveQueue(0,
+                    this.state.queue,
+                    {current_track_id: this.state.current_track_id}
+                ).then(
+                    () => {"queue page: saved"},
+                    (error) => {"queue page: save failed"},
+                );
+            });
+        }
+    }
+
+    stop() {
+        TrackPlayer.stop();
+
+        console.log("queue page: enable stop with app")
+        TrackPlayer.updateOptions({
+            stopWithApp: true,
+        })
+
+        console.log(this.state.queue_dirty)
+
+        if (this.state.queue_dirty) {
+            this.setState({queue_dirty: false}, () => {
+                audioSaveQueue(0,
+                    this.state.queue,
+                    {current_track_id: this.state.current_track_id}
+                ).then(
+                    () => {"queue page: saved"},
+                    (error) => {"queue page: save failed"},
+                );
+            });
+        }
     }
 
     previous() {
         TrackPlayer.skipToPrevious().then(
             () => {
+                this.setState({'queue_dirty': true})
             },
             (error) => {console.log(error)},
         )
@@ -207,6 +271,7 @@ class QueuePage extends React.Component {
     next() {
         TrackPlayer.skipToNext().then(
             () => {
+                this.setState({'queue_dirty': true})
             },
             (error) => {console.log(error)},
         )
@@ -235,6 +300,10 @@ class QueuePage extends React.Component {
 
                         <TouchableOpacity onPress={() => {this.pause()}}>
                             <Text style={{padding: 5}}>pause</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity onPress={() => {this.stop()}}>
+                            <Text style={{padding: 5}}>stop</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity onPress={() => {this.next()}}>

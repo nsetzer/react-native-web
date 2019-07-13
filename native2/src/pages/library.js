@@ -49,7 +49,7 @@ export class LibraryPage extends React.Component {
     async _search() {
 
         var items = this.state.searchText.split().map(s => trim(s)).filter(s => s);
-        var cols = ['artist', 'album', 'title']
+        var cols = ['artist', 'album', 'title', 'comment']
 
         var rule = items.map(s => ('(' + cols.map(c => (c + ' LIKE ?')).join(' OR ') + ')')).join(' AND ')
         var params = []
@@ -76,7 +76,7 @@ export class LibraryPage extends React.Component {
 
         console.log(clause)
 
-        var cols_select = "uid, synced, artist, album, title, file_path, art_path, length"
+        var cols_select = "uid, synced, artist, artist_key, album, title, file_path, art_path, length"
         result = await this.props.db.execute("SELECT " + cols_select + " FROM songs " +
             clause + " ORDER BY artist_key, album, title ASC", params)
 
@@ -156,25 +156,46 @@ export class LibraryPage extends React.Component {
 
     async _create() {
 
-        // var result = await this.props.db.execute("SELECT uid, artist, album, title, file_path, art_path, length from songs WHERE synced == 1 LIMIT 50", [])
-
         var selected = await this.refs.forest.getSelection()
+
+        if (selected.length < 1) {
+            // TODO: alert user
+            return
+        }
+
+        console.log("create playlist")
 
         setConfig()
         var cfg = authConfig()
         const response = await authenticate(cfg.auth.username, cfg.auth.password)
         var token = response.data.token
 
-        if (result.rows.length < 0) {
-            return
+        console.log("create playlist")
+
+        console.log("create playlist: " + selected.length)
+
+        var tracks = selected.map((song => this._create_track(song, token)))
+
+        console.log("create playlist: " + tracks.length)
+
+        for (var i=0; i < tracks.length; i++ ) {
+            console.log("track2: " + i + " - " + tracks[i].url)
         }
 
-        var i, track, tracks=[]
-        for (i=0; i < selected.length; i++) {
-            song = selected[i]
+        console.log(tracks)
 
 
-            track = {
+        await TrackPlayer.reset()
+        await TrackPlayer.add(tracks);
+        await TrackPlayer.play();
+
+        await TrackPlayer.updateOptions({
+            stopWithApp: false,
+        })
+    }
+
+    _create_track(song, token) {
+            var track = {
                 id: song.uid,
                 title: song.title,
                 artist: song.artist,
@@ -182,6 +203,8 @@ export class LibraryPage extends React.Component {
                 duration: song.length,
                 //artwork: ''
             }
+
+            console.log("track1: " + track.title)
 
             if (song.synced) {
                 track.url = song.file_path
@@ -192,39 +215,9 @@ export class LibraryPage extends React.Component {
                 track.url = env.baseUrl + "/api/library/" + song.uid + "/audio?token=" + token
             }
 
-            tracks.push(track)
+            console.log("track1: " + track.url)
 
-        }
-
-        await TrackPlayer.reset()
-        await TrackPlayer.add(tracks);
-        await TrackPlayer.play();
-
-        //await TrackPlayer.setupPlayer({})
-
-        /*
-        TrackPlayer.addEventListener("remote-play", () => {console.log("on play")})
-
-        TrackPlayer.addEventListener("remote-pause", () => {console.log("on pause")})
-        TrackPlayer.addEventListener("remote-stop", () => {console.log("on stop")})
-        //"remote-skip", (track_id) => {}
-        TrackPlayer.addEventListener("remote-next", () => {console.log("on next")})
-        TrackPlayer.addEventListener("remote-previous", () => {console.log("on prev")})
-        // paused/ducking set to true: pause
-        // permanent set to true: stop
-        // if all 3 are false reset to original state
-        TrackPlayer.addEventListener("remote-duck", (paused, permanent, ducking) => {console.log("on duck")})
-
-        TrackPlayer.addEventListener("playback-state", (state) => {console.log("on new state:" + state)})
-        TrackPlayer.addEventListener("playback-queue-ended", (track, position) => {console.log("on queue end")})
-        TrackPlayer.addEventListener("playback-error", (error, message) => {console.log("on error: " + message)})
-        */
-
-        // Adds a track to the queue
-
-
-        // Starts playing it
-        //TrackPlayer.play();
+            return track
     }
 
     expandToggle() {
