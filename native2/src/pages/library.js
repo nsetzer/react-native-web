@@ -39,6 +39,14 @@ export class LibraryPage extends React.Component {
         }
     }
 
+    componentWillMount() {
+
+        if (this.props.db !== null) {
+            this.search()
+        }
+
+    }
+
     search() {
         this._search().then(
             (result) => {console.log("search complete")},
@@ -48,6 +56,7 @@ export class LibraryPage extends React.Component {
 
     async _search() {
 
+        console.log("search term: (" + this.state.searchText + ")")
         var items = this.state.searchText.split().map(s => trim(s)).filter(s => s);
         var cols = ['artist', 'album', 'title', 'comment']
 
@@ -74,11 +83,14 @@ export class LibraryPage extends React.Component {
             }
         }
 
-        console.log(clause)
-
         var cols_select = "uid, synced, artist, artist_key, album, title, file_path, art_path, length"
-        result = await this.props.db.execute("SELECT " + cols_select + " FROM songs " +
-            clause + " ORDER BY artist_key, album, title ASC", params)
+
+        var statement = "SELECT " + cols_select + " FROM songs " +
+            clause + " ORDER BY artist_key, album, title ASC"
+
+        console.log(statement)
+
+        result = await this.props.db.execute(statement, params)
 
         data = {}
         raw_data = {}
@@ -282,7 +294,11 @@ export class LibraryPage extends React.Component {
                     </TouchableOpacity>
 
                 </View>
-                <ForestView ref='forest' data={this.state.data}/>
+                <ForestView
+                    ref='forest'
+                    data={this.state.data}
+                    onMorePressed={(data)=>{console.log(data)}}
+                    />
 
             </View>
         );

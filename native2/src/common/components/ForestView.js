@@ -64,6 +64,12 @@ export class TreeLeaf extends React.Component {
                         <Text>{this.props.data.title}</Text>
                     </TouchableOpacity>:
                     <Text>{this.props.data.title}</Text>}
+
+                {(this.props.onMorePressed===null||this.props.onMorePressed===undefined)?null:
+                    <TouchableOpacity onPress={()=>{this.props.onMorePressed(this.props.data)}}>
+                        <View style={{width: boxWidth, height: boxWidth, backgroundColor: '#339933'}}/>
+                    </TouchableOpacity>
+                }
             </View>
         )
     }
@@ -193,6 +199,7 @@ export class TreeSubCard extends React.Component {
                             key={nodeKey + '_' + index.toString()}
                             selectChild={this.selectChild.bind(this)}
                             isSelected={this.props.isSelected}
+                            onMorePressed={this.props.onMorePressed}
                             data={item}
                         ></TreeLeaf>
                     )
@@ -328,6 +335,7 @@ export class TreeCard extends React.Component {
                             isSelected={this.props.isSelected}
                             selected={this.props.selected}
                             expanded={this.props.expanded}
+                            onMorePressed={this.props.onMorePressed}
                             key={nodeKey + '_' + index.toString()}
                             title={k}
                             data={this.props.data[k]}>
@@ -514,6 +522,7 @@ export default class ForestView extends React.Component {
             data={this.props.data[item]}
             selected={this.state.selected}
             expanded={this.state.expansion}
+            onMorePressed={this.props.onMorePressed}
             highlightMode={this.props.highlightMode||'row'}
             >
         </TreeCard>

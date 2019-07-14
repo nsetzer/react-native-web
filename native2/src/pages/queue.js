@@ -31,6 +31,10 @@ class QueueItem extends React.PureComponent {
         this.props.moveDown(this.props.index)
     }
 
+    onSelect() {
+        this.props.select(this.props.index)
+    }
+
     removeTrack() {
         console.log("remove: " + this.props.index)
         this.props.removeTrack(this.props.index)
@@ -38,34 +42,56 @@ class QueueItem extends React.PureComponent {
 
     render() {
         return (
-            <View style={{flex:1, flexDirection: 'row', alignItems: 'center', width: '100%',
-                marginBottom: 7,
-                borderColor: 'black',
-                borderWidth: 1,
-                backgroundColor: (this.props.isCurrent==this.props.track.id)?'#00005533':'transparent'
-            }}
-            >
-                <Text style={{padding: 5, width: 40, fontWeight: '300', textAlign: 'right'}}>{this.props.index+1}</Text>
-                <View style={{flex:1, flexDirection: 'column', alignItems: 'flex-start'}}>
-                    <Text style={{fontWeight: '900', padding: 5}}>{this.props.track.title}</Text>
-                    <Text style={{fontWeight: '300', padding: 5}}>{this.props.track.artist}</Text>
+            <View style={{width: '100%'}}>
+
+
+                <View style={{flex:1, flexDirection: 'row', alignItems: 'center', width: '100%',
+                    marginBottom: 7,
+                    borderColor: 'black',
+                    borderWidth: 1,
+                    backgroundColor: (this.props.isCurrent==this.props.track.id)?'#00005533':'transparent'
+                }}
+                >
+                    <TouchableOpacity onPress={this.onSelect.bind(this)}>
+                        <Text style={{padding: 5, width: 40, fontWeight: '300', textAlign: 'right'}}>
+                            {this.props.index+1}
+                        </Text>
+                    </TouchableOpacity>
+
+                    <View style={{flex:1, flexDirection: 'column', alignItems: 'flex-start'}}>
+                        <Text style={{fontWeight: '900', padding: 5}}>{this.props.track.title}</Text>
+                        <Text style={{fontWeight: '300', padding: 5}}>{this.props.track.artist}</Text>
+                    </View>
+                    {(this.props.isCurrent===this.props.track.id)?null:
+                        <View style={{flex:1, flexDirection: 'column', alignItems: 'flex-end'}}>
+                            <TouchableOpacity onPress={this.moveUp.bind(this)}>
+                                <Text style={{padding: 5, }}>UP</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={this.moveDown.bind(this)}>
+                                <Text style={{padding: 5}}>DN</Text>
+                            </TouchableOpacity>
+                        </View>
+                    }
+
+
                 </View>
-                {(this.props.isCurrent===this.props.track.id)?null:
-                    <View style={{flex:1, flexDirection: 'column', alignItems: 'flex-end'}}>
-                        <TouchableOpacity onPress={this.moveUp.bind(this)}>
-                            <Text style={{padding: 5, }}>UP</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={this.moveDown.bind(this)}>
-                            <Text style={{padding: 5}}>DN</Text>
-                        </TouchableOpacity>
+
+                {(!this.props.selected)?null:
+                    <View style={{flex:1, flexDirection: 'row', alignItems: 'center', width: '100%'}}>
+                        {(this.props.isCurrent===this.props.track.id)?null:
+                                <TouchableOpacity onPress={() => {}}>
+                                    <Text style={{padding: 5}}>Play</Text>
+                                </TouchableOpacity>
+                        }
+
+                        {(this.props.isCurrent===this.props.track.id)?null:
+                                <TouchableOpacity onPress={this.removeTrack.bind(this)}>
+                                    <Text style={{padding: 5}}>Remove</Text>
+                                </TouchableOpacity>
+                        }
                     </View>
                 }
 
-                {(this.props.isCurrent===this.props.track.id)?null:
-                    <TouchableOpacity onPress={this.removeTrack.bind(this)}>
-                        <Text style={{padding: 5}}>RM</Text>
-                    </TouchableOpacity>
-                }
             </View>
         )
     }
@@ -142,7 +168,7 @@ class QueuePage extends React.Component {
             (error) => {console.log(error)}
         )
 
-        this.setState({'queue_dirty': true})
+        this.setState({'queue_dirty': true, selectedIndex: -1})
     }
 
     moveDown(index) {
@@ -170,7 +196,11 @@ class QueuePage extends React.Component {
             (error) => {console.log(error)}
         )
 
-        this.setState({'queue_dirty': true})
+        this.setState({'queue_dirty': true, selectedIndex: -1})
+    }
+
+    onSelect(index) {
+        this.setState({selectedIndex: this.state.selectedIndex==index?-1:index})
     }
 
     removeTrack(index) {
@@ -188,7 +218,11 @@ class QueuePage extends React.Component {
 
         })
 
-        this.setState({'queue_dirty': true})
+        this.setState({'queue_dirty': true, selectedIndex: -1})
+    }
+
+    playTrack(index) {
+        console.log("play index")
     }
 
     itemKeyExtractor = (item, index) => item.id;
@@ -201,6 +235,8 @@ class QueuePage extends React.Component {
             isCurrent={this.props.current_track_id}
             moveUp={this.moveUp.bind(this)}
             moveDown={this.moveDown.bind(this)}
+            select={this.onSelect.bind(this)}
+            selected={this.state.selectedIndex === index}
             removeTrack={this.removeTrack.bind(this)}
             />
     );

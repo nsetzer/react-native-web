@@ -58,6 +58,8 @@ export function audioLoadQueue() {
     return new Promise(async resolve => {
         const str = await AsyncStorage.getItem('yue-audio-queue')
         console.log(str)
+        // TODO: fix this, there should not be any undefined values
+        // in the first place
         var obj = JSON.parse(str.replace("undefined", "null"))
         console.log(obj)
         resolve(obj)
