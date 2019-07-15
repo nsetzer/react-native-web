@@ -122,15 +122,23 @@ class MainPage extends React.Component {
     }
 
     render() {
+
+        /*
+        <ScrollView
+                        stickyHeaderIndices={[0]}
+                        nestedScrollEnabled={true}
+                        showsVerticalScrollIndicator={false}>
+        </ScrollView>
+        */
+
         return (
             <NavMenu
                 routes={this.getRoutes()}
                 visible={this.state.showMenu}
                 slimMode={this.state.slimMode}
                 hide={() => {this.setState({showMenu: false})}}>
-                    <ScrollView
-                        stickyHeaderIndices={[0]}
-                        showsVerticalScrollIndicator={false}>
+
+                    <View style={{width: "100%"}}>
                         <Header onPress={this.onPress.bind(this)}/>
                         <DownloadComponent />
 
@@ -143,7 +151,7 @@ class MainPage extends React.Component {
                             <Route name='main-switch' path='/u/notes'     ><NotesPage     /></Route>
                             <Route name='main-switch' path='/u/settings'  ><SettingsPage  /></Route>
                         </Switch>
-                    </ScrollView>
+                    </View>
             </NavMenu>
         );
     }

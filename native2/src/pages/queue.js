@@ -1,7 +1,7 @@
 
 
 import React from 'react';
-import { Text, View, StyleSheet, FlatList, TouchableOpacity, AsyncStorage} from "react-native";
+import { Text, View, StyleSheet, FlatList, TouchableOpacity, ScrollView} from "react-native";
 import { connect } from "react-redux";
 
 import TrackPlayer from 'react-native-track-player';
@@ -315,14 +315,15 @@ class QueuePage extends React.Component {
 
     render() {
         return (
-            <View>
+            <ScrollView stickyHeaderIndices={[0]}>
                 <View style={{
                     flex:1,
                     alignItems:'center',
                     justifyContent: 'center',
                     height:'100%',
                     width:'100%',
-                }}>
+                    backgroundColor: "white"
+                    }}>
 
                     {(!this.props.db)?<Text>error loading db</Text>:
                         <View style={{
@@ -366,7 +367,7 @@ class QueuePage extends React.Component {
                     windowSize={10}
                 />
 
-            </View>
+            </ScrollView>
         );
     }
 }

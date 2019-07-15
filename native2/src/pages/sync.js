@@ -9,7 +9,7 @@ hide sync button until changes have been made
 
 */
 import React from 'react';
-import { Text, View, TouchableOpacity, TextInput } from "react-native";
+import { Text, View, TouchableOpacity, TextInput, ScrollView } from "react-native";
 import { connect } from "react-redux";
 
 import { env, librarySearch, authenticate } from '../common/api';
@@ -477,49 +477,47 @@ export class SyncPage extends React.Component {
         //</TouchableOpacity>
 
         return (
-            <View style={{
-                flex:1,
-                alignItems:'center',
-                justifyContent: 'center',
-                height:'100%'
-            }}>
-                <TextInput
-                    ref='editSearch'
-                    style={{flexGrow: 1, borderWidth: 1, borderColor: 'black', width: "100%"}}
-                    onChangeText={(text) => this.setState({searchText: text})}
-                    onSubmitEditing={() => {this.search()}}
-                    />
+            <ScrollView stickyHeaderIndices={[0]}>
 
-                {!this.props.db?<Text>error loading db</Text>:
-                    <View style={{
-                        flex:1,
-                        flexDirection: 'row',
-                    }}>
+                <View style={{width: "100%", backgroundColor: "white"}}>
+                    <TextInput
+                        ref='editSearch'
+                        style={{flexGrow: 1, borderWidth: 1, borderColor: 'black', width: "100%"}}
+                        onChangeText={(text) => this.setState({searchText: text})}
+                        onSubmitEditing={() => {this.search()}}
+                        />
 
-                    <TouchableOpacity onPress={() => {this.fetchData()}}>
-                        <Text style={{padding: 5}}>Fetch</Text>
-                    </TouchableOpacity>
+                    {!this.props.db?<Text>error loading db</Text>:
+                        <View style={{
+                            flex:1,
+                            flexDirection: 'row',
+                        }}>
 
-                    <TouchableOpacity onPress={() => {this.search()}}>
-                        <Text style={{padding: 5}}>Search</Text>
-                    </TouchableOpacity>
+                        <TouchableOpacity onPress={() => {this.fetchData()}}>
+                            <Text style={{padding: 5}}>Fetch</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity onPress={() => {this.search()}}>
+                            <Text style={{padding: 5}}>Search</Text>
+                        </TouchableOpacity>
 
 
 
-                    <TouchableOpacity onPress={() => {this.selectToggle()}}>
-                        <Text style={{padding: 5}}>Select All</Text>
-                    </TouchableOpacity>
+                        <TouchableOpacity onPress={() => {this.selectToggle()}}>
+                            <Text style={{padding: 5}}>Select All</Text>
+                        </TouchableOpacity>
 
-                    <TouchableOpacity onPress={() => {this.startSync()}}>
-                        <Text style={{padding: 5}}>Sync</Text>
-                    </TouchableOpacity>
+                        <TouchableOpacity onPress={() => {this.startSync()}}>
+                            <Text style={{padding: 5}}>Sync</Text>
+                        </TouchableOpacity>
 
-                    <TouchableOpacity onPress={() => {this.startDownload()}}>
-                        <Text style={{padding: 5}}>Download</Text>
-                    </TouchableOpacity>
+                        <TouchableOpacity onPress={() => {this.startDownload()}}>
+                            <Text style={{padding: 5}}>Download</Text>
+                        </TouchableOpacity>
 
-                    </View>
-                }
+                        </View>
+                    }
+                </View>
 
                 <ForestView
                     ref='forest'
@@ -528,7 +526,7 @@ export class SyncPage extends React.Component {
                     itemKeyExtractor={(item) => item.uid}
                     highlightMode="row"/>
 
-            </View>
+            </ScrollView>
         );
     }
 }

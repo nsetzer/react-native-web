@@ -1,7 +1,7 @@
 
 
 import React from 'react';
-import { Text, View, TouchableOpacity, TextInput } from "react-native";
+import { Text, View, TouchableOpacity, TextInput, ScrollView } from "react-native";
 import { connect } from "react-redux";
 
 import { env, librarySearch, authenticate, downloadFile, dirs, authConfig } from '../common/api';
@@ -36,6 +36,10 @@ export class LibraryPage extends React.Component {
 
             includeRemote: false,
             searchText: "",
+
+            moreData: null,
+
+            token: null,
         }
     }
 
@@ -45,7 +49,31 @@ export class LibraryPage extends React.Component {
             this.search()
         }
 
+        setConfig()
+        var cfg = authConfig()
+        authenticate(cfg.auth.username, cfg.auth.password).then(
+            (response) => {this.setState({token: response.data.token})},
+            (error) => {this.setState({token: null})},
+        );
+
     }
+
+    /*
+    // TODO: on initial load run search
+    componentDidUpdate(prevProps, prevState) {
+
+        if (prevProps.db != prevState.db) {
+            console.log("setting database")
+            this.setState({
+                db: prevProps.db,
+            }, () => {
+                if (prevProps.db !== null) {
+                    this.search()
+                }
+            })
+        }
+    }
+    */
 
     search() {
         this._search().then(
@@ -246,6 +274,59 @@ export class LibraryPage extends React.Component {
         )
     }
 
+    onMorePressed(data) {
+
+        this.setState({moreData: data})
+    }
+
+    onMorePlayNext() {
+
+        var item = this.state.moreData
+        this.setState({moreData: null}, () => {
+            TrackPlayer.getQueue().then(
+                (queue) => {
+                    TrackPlayer.getCurrentTrack().then(
+                        (track) => {
+                            this._insertAfter(queue, track, item)
+                        }
+                    );
+                }
+            );
+        })
+    }
+
+    _insertAfter(queue, currentTrackId, data, token) {
+        // insert a track after the current track
+        // remove the track from the queue it it exists
+        // before inserting it again
+        var idx = -1;
+        var rdx = -1;
+        for (var i=0; i < queue.length; i++) {
+            if (queue[i].id == currentTrackId) {
+                idx = i;
+            }
+            if (queue[i].id == data.uid) {
+                rdx = i;
+            }
+        }
+
+        var nextTrackId = null;
+        if (idx >= 0 && idx < (queue.length - 1)) {
+            nextTrackId = queue[idx+1].id;
+        }
+
+        var track = this._create_track(data, this.state.token)
+
+        if (rdx >= 0 && rdx < queue.length) {
+            TrackPlayer.remove(data.uid).then(() => {
+                TrackPlayer.add(track, nextTrackId)
+            })
+        } else {
+            TrackPlayer.add(track, nextTrackId)
+        }
+
+    }
+
     render() {
 
         if (!this.props.db) {
@@ -253,54 +334,62 @@ export class LibraryPage extends React.Component {
         }
 
         return (
-            <View style={{
-                flex:1,
-                alignItems:'center',
-                justifyContent: 'center',
-                height:'100%'
-            }}>
-                <View style={{
-                    flex:1,
-                    flexDirection: 'row',
-                    alignItems: 'center'
-                }}>
 
+            <ScrollView stickyHeaderIndices={[0]}>
+                <View style={{width:"100%", backgroundColor: "white"}}>
 
-                <TextInput
-                    ref='editSearch'
-                    style={{flexGrow: 1, borderWidth: 1, borderColor: 'black'}}
-                    onChangeText={(text) => this.setState({searchText: text})}
-                    onSubmitEditing={() => {this.search()}}
-                    />
-
-                <TouchableOpacity onPress={() => {this.search()}}>
-                    <Text style={{padding: 5}}>Search</Text>
-                </TouchableOpacity>
-
-                <CheckBox
-                    style={{paddingRight: 5}}
-                    onClick={()=>{this.setState({includeRemote: !this.state.includeRemote})}}
-                    isChecked={this.state.includeRemote}
-                />
-                </View>
-
-                <View style={{
+                    <View style={{
                         flex:1,
                         flexDirection: 'row',
                         alignItems: 'center'
-                    }}>
-                    <TouchableOpacity onPress={() => {this.create()}}>
-                        <Text style={{padding: 5}}>create</Text>
-                    </TouchableOpacity>
+                        }}>
+
+
+                        <TextInput
+                            ref='editSearch'
+                            style={{flexGrow: 1, borderWidth: 1, borderColor: 'black'}}
+                            onChangeText={(text) => this.setState({searchText: text})}
+                            onSubmitEditing={() => {this.search()}}
+                            />
+
+                        <TouchableOpacity onPress={() => {this.search()}}>
+                            <Text style={{padding: 5}}>Search</Text>
+                        </TouchableOpacity>
+
+                        <CheckBox
+                            style={{paddingRight: 5}}
+                            onClick={()=>{this.setState({includeRemote: !this.state.includeRemote})}}
+                            isChecked={this.state.includeRemote}
+                        />
+                    </View>
+
+                    <View style={{
+                        flex:1,
+                        flexDirection: 'row',
+                        alignItems: 'center'
+                        }}>
+                        <TouchableOpacity onPress={() => {this.create()}}>
+                            <Text style={{padding: 5}}>create</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {this.state.moreData===null?null:
+                        <View>
+                            <TouchableOpacity onPress={this.onMorePlayNext.bind(this)}>
+                                <Text style={{padding: 5}}>Play Next</Text>
+                            </TouchableOpacity>
+                        </View>
+                    }
 
                 </View>
+
                 <ForestView
                     ref='forest'
                     data={this.state.data}
-                    onMorePressed={(data)=>{console.log(data)}}
+                    onMorePressed={this.onMorePressed.bind(this)}
                     />
 
-            </View>
+            </ScrollView>
         );
     }
 }

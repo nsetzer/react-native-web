@@ -8,12 +8,7 @@ class NowPlayingPage extends React.Component {
 
     render() {
         return (
-            <View style={{
-                flex:1,
-                alignItems:'center',
-                justifyContent: 'center',
-                height:'100%'
-            }}>
+            <View>
                 <Text>Page Content</Text>
             </View>
         );
