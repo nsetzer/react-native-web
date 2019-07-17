@@ -6,6 +6,8 @@ import { connect } from "react-redux";
 
 import { Router, Route, Switch, NavMenu, pushLocation } from '../common/components/Route'
 
+import TrackPlayer from 'react-native-track-player';
+
 import {
     SvgNowPlaying,
     SvgLibrary,
@@ -35,13 +37,58 @@ class Header extends React.Component {
         super(props);
     }
 
+    playpause() {
+
+        TrackPlayer.getState().then((state) => {
+
+            var fptr = null
+            var stopWithApp = true
+            if (state == TrackPlayer.STATE_PLAYING) {
+                fptr = TrackPlayer.pause
+            } else {
+                fptr = TrackPlayer.play
+                stopWithApp = false
+            }
+
+            if (fptr !== null) {
+                fptr().then(() => {
+                    TrackPlayer.updateOptions({stopWithApp})
+                });
+            }
+        })
+
+    }
+
+    next() {
+        TrackPlayer.skipToNext()
+    }
+
     render() {
         return (
-            <View style={{backgroundColor: '#335588', height:32, width: '100%'}}>
+            <View style={{
+                backgroundColor: '#335588',
+                height:48,
+                width: '100%'
+                }}>
+            <View style={{
+                flex: 1,
+                flexDirection: "row",
+                }}>
 
-            <TouchableOpacity onPress={() => {this.props.onPress()}}>
-            <Text>Menu</Text>
+            <TouchableOpacity style={{margin: 5}} onPress={() => {this.props.onPress()}}>
+                <Text style={{padding: 8, backgroundColor: "#FFFFFF33"}}>Menu</Text>
             </TouchableOpacity>
+
+            <View style={{flexGrow:1}}></View>
+
+            <TouchableOpacity style={{margin: 5}} onPress={this.playpause.bind(this)}>
+                <Text style={{padding: 8, backgroundColor: "#FFFFFF33"}}>{">|"}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={{margin: 5}} onPress={this.next.bind(this)}>
+                <Text style={{padding: 8, backgroundColor: "#FFFFFF33"}}>{">>"}</Text>
+            </TouchableOpacity>
+            </View>
             </View>
 
         );

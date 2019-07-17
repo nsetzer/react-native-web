@@ -201,13 +201,20 @@ class IDownloadComponent extends React.Component {
         }
     }
 
+    _makeSafe(s, remove_space) {
+        if (remove_space) {
+            s = s.replace(/\s/g, '_')
+        }
+        // TrackPlayer cannot load tracks with a :
+        return s.replace(/[\?\.\:\'\"\\\/\[\]\(\)]/g, '')
+    }
     _doDownloadInit_processItem(item, token) {
-        var file_name = ((item.album_index!==null)?item.album_index + "_":'') +
-            item.title + "." + item.uid.substring(0, 8) +".ogg"
-
-        file_name = file_name.replace(/\s/g, '_')
-        file_name = file_name.replace(/[\?\'\"\\\/\[\]\(\)]/g, '')
-        file_name = item.artist + "/" + item.album + "/" + file_name
+        var file_index = ((item.album_index!==null)?item.album_index + "_":'')
+        var file_suffix = "." + item.uid.substring(0, 8) + ".ogg"
+        var file_name = this._makeSafe(item.title, true)
+        var file_artist = this._makeSafe(item.artist, false)
+        var file_album = this._makeSafe(item.album, false)
+        file_name = file_artist + "/" + file_album + "/" + file_name + file_suffix
 
         var url = env.baseUrl + "/api/library/" + item.uid + "/audio"
         var headers = {'Authorization': token}
@@ -300,12 +307,7 @@ class IDownloadComponent extends React.Component {
         if (this.state.dlerror !== null) {
             return (
                 <View>
-                <View style={{
-                            flex:1,
-                            alignItems:'center',
-                            justifyContent: 'center',
-                            height:'100%'
-                        }}>
+                <View>
                 <Text>{this.state.dlerror}</Text>
                 </View>
                 </View>
@@ -314,12 +316,7 @@ class IDownloadComponent extends React.Component {
 
         return (
             <View>
-            <View style={{
-                        flex:1,
-                        alignItems:'center',
-                        justifyContent: 'center',
-                        height:'100%'
-                    }}>
+            <View>
 
             {this.state.dlalive?
                 <TouchableOpacity onPress={() => {this.setState({dlalive: false})}}>

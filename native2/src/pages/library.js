@@ -8,6 +8,7 @@ import { env, librarySearch, authenticate, downloadFile, dirs, authConfig } from
 import { setConfig } from '../config';
 
 import ForestView from '../common/components/ForestView';
+import {fisheryates} from '../common/shuffle';
 
 import TrackPlayer from 'react-native-track-player';
 
@@ -111,33 +112,7 @@ export class LibraryPage extends React.Component {
             }
         }
 
-        var cols_select = "uid, synced, artist, artist_key, album, title, file_path, art_path, length"
-
-        var statement = "SELECT " + cols_select + " FROM songs " +
-            clause + " ORDER BY artist_key, album, title ASC"
-
-        console.log(statement)
-
-        result = await this.props.db.execute(statement, params)
-
-        data = {}
-        raw_data = {}
-        for (var i=0; i < result.rows.length; i++) {
-            var item = result.rows.item(i);
-
-            raw_data[item.uid] = item
-
-            if (data[item.artist] === undefined) {
-                data[item.artist] = {}
-            }
-
-            if (data[item.artist][item.album] === undefined) {
-                data[item.artist][item.album] = []
-            }
-
-            data[item.artist][item.album].push(item)
-
-        }
+        await this.async_search_main(clause, params)
 
         /*
         data = []
@@ -184,6 +159,38 @@ export class LibraryPage extends React.Component {
 
         */
 
+    }
+
+    async async_search_main(clause, params) {
+
+        var cols_select = "uid, synced, artist, artist_key, album, title, genre, file_path, art_path, length, rating, language"
+
+        var statement = "SELECT " + cols_select + " FROM songs " +
+            clause + " ORDER BY artist_key, album, title ASC"
+
+        console.log(statement)
+
+        result = await this.props.db.execute(statement, params)
+
+        data = {}
+        raw_data = {}
+        for (var i=0; i < result.rows.length; i++) {
+            var item = result.rows.item(i);
+
+            raw_data[item.uid] = item
+
+            if (data[item.artist] === undefined) {
+                data[item.artist] = {}
+            }
+
+            if (data[item.artist][item.album] === undefined) {
+                data[item.artist][item.album] = []
+            }
+
+            data[item.artist][item.album].push(item)
+
+        }
+
         this.setState({data, raw_data})
     }
 
@@ -203,27 +210,11 @@ export class LibraryPage extends React.Component {
             return
         }
 
-        console.log("create playlist")
-
-        setConfig()
-        var cfg = authConfig()
-        const response = await authenticate(cfg.auth.username, cfg.auth.password)
-        var token = response.data.token
-
-        console.log("create playlist")
-
         console.log("create playlist: " + selected.length)
 
-        var tracks = selected.map((song => this._create_track(song, token)))
+        var tracks = fisheryates(selected.map((song => this._create_track(song, this.state.token))))
 
         console.log("create playlist: " + tracks.length)
-
-        for (var i=0; i < tracks.length; i++ ) {
-            console.log("track2: " + i + " - " + tracks[i].url)
-        }
-
-        console.log(tracks)
-
 
         await TrackPlayer.reset()
         await TrackPlayer.add(tracks);
@@ -232,6 +223,8 @@ export class LibraryPage extends React.Component {
         await TrackPlayer.updateOptions({
             stopWithApp: false,
         })
+
+        await this.refs.forest.clearSelection()
     }
 
     _create_track(song, token) {
@@ -244,8 +237,6 @@ export class LibraryPage extends React.Component {
                 //artwork: ''
             }
 
-            console.log("track1: " + track.title)
-
             if (song.synced) {
                 track.url = song.file_path
             } else {
@@ -254,8 +245,6 @@ export class LibraryPage extends React.Component {
                 // support extended URIs, with header support
                 track.url = env.baseUrl + "/api/library/" + song.uid + "/audio?token=" + token
             }
-
-            console.log("track1: " + track.url)
 
             return track
     }
@@ -272,6 +261,25 @@ export class LibraryPage extends React.Component {
             (result) => {console.log("select complete")},
             (error) => {console.error(error)}
         )
+    }
+
+    dynSearch(rule, params) {
+        this._dynSearch(rule, params).then(
+            (result) => {console.log("search complete")},
+            (error) => {console.error(error)}
+        )
+    }
+
+    async _dynSearch(rule, params) {
+
+        var clause
+        if (this.state.includeRemote) {
+            clause = "WHERE (" + rule + ")"
+        } else {
+            clause = "WHERE (synced == 1 AND (" + rule + "))"
+        }
+
+        await this.async_search_main(clause, params)
     }
 
     onMorePressed(data) {
@@ -352,8 +360,8 @@ export class LibraryPage extends React.Component {
                             onSubmitEditing={() => {this.search()}}
                             />
 
-                        <TouchableOpacity onPress={() => {this.search()}}>
-                            <Text style={{padding: 5}}>Search</Text>
+                        <TouchableOpacity style={{margin: 5}} onPress={() => {this.search()}}>
+                            <Text style={{padding: 8, backgroundColor: "#3333AA33"}}>Search</Text>
                         </TouchableOpacity>
 
                         <CheckBox
@@ -368,15 +376,30 @@ export class LibraryPage extends React.Component {
                         flexDirection: 'row',
                         alignItems: 'center'
                         }}>
-                        <TouchableOpacity onPress={() => {this.create()}}>
-                            <Text style={{padding: 5}}>create</Text>
+                        <TouchableOpacity style={{margin: 5}} onPress={() => {this.create()}}>
+                            <Text style={{padding: 8, backgroundColor: "#3333AA33"}}>create</Text>
                         </TouchableOpacity>
+
+                        <TouchableOpacity style={{margin: 5}} onPress={() => {this.selectToggle()}}>
+                            <Text style={{padding: 8, backgroundColor: "#3333AA33"}}>Select All</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={{margin: 5}} onPress={() => {
+                            this.dynSearch("rating > ? AND language LIKE ?", [5, '%english%'])}}>
+                            <Text style={{padding: 8, backgroundColor: "#3333AA33"}}>en_best</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={{margin: 5}} onPress={() => {
+                            this.dynSearch("rating > ? AND genre LIKE ?", [3, '%stoner%'])}}>
+                            <Text style={{padding: 8, backgroundColor: "#3333AA33"}}>st_best</Text>
+                        </TouchableOpacity>
+
                     </View>
 
                     {this.state.moreData===null?null:
                         <View>
-                            <TouchableOpacity onPress={this.onMorePlayNext.bind(this)}>
-                                <Text style={{padding: 5}}>Play Next</Text>
+                            <TouchableOpacity style={{margin: 5}} onPress={this.onMorePlayNext.bind(this)}>
+                                <Text style={{padding: 8, backgroundColor: "#3333AA33"}}>Play Next</Text>
                             </TouchableOpacity>
                         </View>
                     }

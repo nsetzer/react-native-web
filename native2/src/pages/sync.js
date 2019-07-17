@@ -430,7 +430,9 @@ export class SyncPage extends React.Component {
 
             if (!!item.sync) {
                 update_items[item.uid] = false
+                // update local cache
                 item.sync = false
+                item.synced = false
             }
         })
 
@@ -441,7 +443,16 @@ export class SyncPage extends React.Component {
         for (var i=0; i < keys.length; i++) {
             key = keys[i]
 
-            await this.props.db.t.songs.update({uid: key}, {sync: update_items[key]})
+            var _key = {uid: key}
+            var _val = {sync: update_items[key]}
+            // TODO: another process should search for
+            // sync == false, synced==true and delete the files
+            // and then clear the synced flag. for now this
+            // is being done to force a re download
+            if (!_val.sync) {
+                _val.synced = false
+            }
+            await this.props.db.t.songs.update(_key, _val)
 
         }
 

@@ -504,7 +504,12 @@ export default class ForestView extends React.Component {
 
     async setSelection(keys, keyExtractor) {
         const selected = {}
-        this._setSelection(this.props.data, 'n', selected, keys, keyExtractor)
+        _setSelection(this.props.data, 'n', selected, keys, keyExtractor)
+        this.setState({selected})
+    }
+
+    async clearSelection() {
+        const selected = {}
         this.setState({selected})
     }
 

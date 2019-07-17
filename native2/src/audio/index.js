@@ -7,6 +7,14 @@ import AsyncStorage from '@react-native-community/async-storage'
 
 import TrackPlayer from 'react-native-track-player';
 
+var state_map = {}
+state_map[TrackPlayer.STATE_NONE] = "STATE_NONE"
+state_map[TrackPlayer.STATE_PLAYING] = "STATE_PLAYING"
+state_map[TrackPlayer.STATE_PAUSED] = "STATE_PAUSED"
+state_map[TrackPlayer.STATE_STOPPED] = "STATE_STOPPED"
+state_map[TrackPlayer.STATE_BUFFERING] = "STATE_BUFFERING"
+state_map[TrackPlayer.STATE_READY] = "STATE_READY"
+
 export const AUDIO_SET_QUEUE_ACTION = "AUDIO_SET_QUEUE_ACTION"
 export const AUDIO_SET_CURRENT_TRACK = "AUDIO_SET_CURRENT_TRACK"
 
@@ -147,6 +155,7 @@ class IAudioComponent extends React.Component {
 
     _init_main() {
         TrackPlayer.updateOptions({
+            stopWithApp: true,
             capabilities: [
                 TrackPlayer.CAPABILITY_PLAY,
                 TrackPlayer.CAPABILITY_PAUSE,
@@ -161,6 +170,14 @@ class IAudioComponent extends React.Component {
 
         TrackPlayer.addEventListener('playback-track-changed', (obj) => {
             this.props.setCurrentTrack(obj.nextTrack)
+        })
+
+        TrackPlayer.addEventListener('playback-state', (state) => {
+            console.log("playback state: " + state_map[state.state])
+        })
+
+        TrackPlayer.addEventListener('playback-error', (obj) => {
+            console.log("playback error: " + obj.code + " -- " + obj.message)
         })
     }
 
