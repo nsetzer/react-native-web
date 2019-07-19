@@ -504,26 +504,26 @@ export class SyncPage extends React.Component {
                             flexDirection: 'row',
                         }}>
 
-                        <TouchableOpacity onPress={() => {this.fetchData()}}>
-                            <Text style={{padding: 5}}>Fetch</Text>
+                        <TouchableOpacity style={{margin: 5}} onPress={() => {this.fetchData()}}>
+                            <Text style={{padding: 8, backgroundColor: "#3333AA33"}}>Fetch</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity onPress={() => {this.search()}}>
-                            <Text style={{padding: 5}}>Search</Text>
+                        <TouchableOpacity style={{margin: 5}} onPress={() => {this.search()}}>
+                            <Text style={{padding: 8, backgroundColor: "#3333AA33"}}>Search</Text>
                         </TouchableOpacity>
 
 
 
-                        <TouchableOpacity onPress={() => {this.selectToggle()}}>
-                            <Text style={{padding: 5}}>Select All</Text>
+                        <TouchableOpacity style={{margin: 5}} onPress={() => {this.selectToggle()}}>
+                            <Text style={{padding: 8, backgroundColor: "#3333AA33"}}>Select All</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity onPress={() => {this.startSync()}}>
-                            <Text style={{padding: 5}}>Sync</Text>
+                        <TouchableOpacity style={{margin: 5}} onPress={() => {this.startSync()}}>
+                            <Text style={{padding: 8, backgroundColor: "#3333AA33"}}>Sync</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity onPress={() => {this.startDownload()}}>
-                            <Text style={{padding: 5}}>Download</Text>
+                        <TouchableOpacity style={{margin: 5}} onPress={() => {this.startDownload()}}>
+                            <Text style={{padding: 8, backgroundColor: "#3333AA33"}}>Download</Text>
                         </TouchableOpacity>
 
                         </View>
