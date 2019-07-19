@@ -3,7 +3,7 @@
   "scripts": {
     "web": "cross-env REACT_APP_MOCK_API=true react-scripts start",
     "dev-web": "react-scripts start",
-    "build-web": "react-scripts build",
+    "build-web": "cross-env INLINE_RUNTIME_CHUNK=false react-scripts build",
     "serve-web": "serve -s build",
     "test-web": "react-scripts test --env=jsdom",
     "eject-web": "react-scripts eject",

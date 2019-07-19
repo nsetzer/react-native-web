@@ -639,6 +639,11 @@ export class StoragePage extends React.Component {
             next_state['next_page'] = -1
         }
 
+        console.log(
+            "result count: " + items.length +
+            " current page: " + this.state.next_page +
+            " -> " + next_state['next_page'])
+
         this.setState(next_state)
     }
 

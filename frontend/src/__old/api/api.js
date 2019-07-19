@@ -4,26 +4,14 @@ import axios from 'axios';
 
 import { serialize } from './common'
 
-import { Platform } from 'react-native';
-
 export const env = {baseUrl: ''}
 
-if (Platform.OS === 'web') {
-    if (process.env.NODE_ENV === "development" ||
-        process.env.NODE_ENV === "dev" ||
-        process.env.NODE_ENV === "test") {
-        env.baseUrl = "http://" + window.location.hostname + ":4200"
-    } else {
-        env.baseUrl = ""
-    }
+if (process.env.NODE_ENV === "development" ||
+    process.env.NODE_ENV === "dev" ||
+    process.env.NODE_ENV === "test") {
+    env.baseUrl = "http://" + window.location.hostname + ":4200"
 } else {
-    if (process.env.NODE_ENV === "development" ||
-        process.env.NODE_ENV === "dev" ||
-        process.env.NODE_ENV === "test") {
-        env.baseUrl = "http://localhost:4200"
-    } else {
-        env.baseUrl = "https://yueapp.duckdns.org"
-    }
+    env.baseUrl = ""
 }
 
 if (process.env.REACT_APP_BACKEND_PATH) {
@@ -83,14 +71,6 @@ export function fsGetPath(root, path) {
     return axios.get(url, config);
 }
 
-export function fsSearch(root, path, terms, page, limit) {
-    const params = {path, terms, page, limit}
-    const url = env.baseUrl + '/api/fs/' + root +'/search' + serialize(params)
-    console.log(url)
-    const config = authConfig();
-    return axios.get(url, config);
-}
-
 
 export function libraryGetSong(song_id) {
     const url = env.baseUrl + '/api/library/' + song_id
@@ -144,10 +124,4 @@ export function storageRevokePublicUri(root, path) {
 export function storagePublicFileInfo(file_id) {
     const url = env.baseUrl + '/api/fs/public/' + file_id + serialize({info: true})
     return axios.get(url);
-}
-
-export function getCurlDocumentation() {
-    const url = env.baseUrl + '/api/doc' + serialize({hostname: env.baseUrl})
-    const config = authConfig();
-    return axios.get(url, config);
 }
