@@ -11,7 +11,7 @@ import { Switch, Route } from '../common/components/Route'
 
 import HyperLink from '../common/components/HyperLink'
 
-import {Svg, SvgFile, SvgFolder, SvgMore} from '../common/components/svg'
+import {Svg, SvgFile, SvgFolder, SvgMore, SvgMediaError} from '../common/components/svg'
 
 // todo web compat layer for video
 // import Video from 'react-native-video';
@@ -77,14 +77,14 @@ function dirpath(str, prefix="") {
 function hasThumb(data) {
     var lst = data.name.split('.')
     var ext = lst[lst.length-1].toLowerCase()
-    const exts = {jpg: true, png: true, bmp: true, gif: true, webm: true}
+    const exts = {jpg: true, jpeg: true, png: true, bmp: true, gif: true, webm: true}
     return (data.encryption !== 'client' && data.encryption !== 'server') && exts[ext]
 }
 
 function hasPreview(data) {
     var lst = data.name.split('.')
     var ext = lst[lst.length-1].toLowerCase()
-    const exts = {jpg: true, png: true, bmp: true, gif: true}
+    const exts = {jpg: true, jpeg: true, png: true, bmp: true, gif: true}
     return (data.encryption !== 'client' && data.encryption !== 'server') && exts[ext]
 }
 
@@ -123,7 +123,6 @@ class ModalDialog extends React.PureComponent {
             </TouchableOpacity>
         )
     }
-
 }
 
 class FadeInView extends React.Component {
@@ -176,6 +175,9 @@ class ListItem extends React.PureComponent {
             expand: false,
             public: null,  // set when a new link is generated and valid is false
             valid: true,  // indicates that prop.data.public is valid
+
+            iconLoading: false,
+            iconError: false,
         }
     }
 
@@ -259,17 +261,26 @@ class ListItem extends React.PureComponent {
     }
 
     render_icon_impl(url) {
+
+        var borderColor = encryptionColorMap[this.props.data.encryption] || '#000000';
         if (!this.props.data.isDir && hasThumb(this.props.data)) {
             return (<Image
-
                         style={{
-                            borderColor: (encryptionColorMap[this.props.data.encryption] || '#000000'),
-                            borderWidth: 0,width: 80, height: 60}}
+                            borderColor: (this.state.iconLoading)?'#777777':borderColor,
+                            backgroundColor: (this.state.iconLoading)?'#777777':borderColor,
+                            borderWidth: 0,
+                            width: 80,
+                            height: 60
+                        }}
                         source={{uri: url + "&preview=thumb&dl=0", headers: {Authorization: this.props.token}}}
+                        onLoadStart={(e) => this.setState({iconLoading: true})}
+                        onLoadEnd={(e) => this.setState({iconLoading: false})}
+                        onError={(e) => {console.log(e); this.setState({iconError: true})}}
+
                     />);
         } else {
             return (<View style={{
-                            borderColor: (encryptionColorMap[this.props.data.encryption] || '#000000'),
+                            borderColor: borderColor,
                             borderWidth: 0}}>
                         <Svg
                             src={this.props.data.isDir ? SvgFolder : SvgFile}
@@ -283,6 +294,19 @@ class ListItem extends React.PureComponent {
     }
 
     render_icon(url) {
+        if (this.state.iconError) {
+            return (<View style={{
+                            borderColor: (encryptionColorMap[this.props.data.encryption] || '#000000'),
+                            borderWidth: 0}}>
+                        <Svg
+                            src={SvgMediaError}
+                            style={{
+                                fill: '#F00000',
+                                borderColor: (encryptionColorMap[this.props.data.encryption] || '#000000'),
+                                borderWidth: 3,
+                                width: 80, height: 60}}/>
+                    </View>);
+        }
         return (<TouchableOpacity onPress={() => {
                         this.props.modalShow(this.show_preview.bind(this))
                     }}>

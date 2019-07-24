@@ -74,10 +74,11 @@ export class Sound extends React.PureComponent {
         volume: 0.5,
     }
 
-    this.play = this.play.bind(this)
-    this.stop = this.stop.bind(this)
+    //this.play = this.play.bind(this)
+    //this.stop = this.stop.bind(this)
   }
 
+  /*
   play() {
     if (this.sound.state() !== 'loaded') return this
     this.sound.play()
@@ -88,10 +89,15 @@ export class Sound extends React.PureComponent {
     this.sound.stop()
     return this
   }
+  */
 
   load(url) {
 
     if (this.state.current_sound) {
+
+      if (this.state.current_sound.playing(this.state.current_sound_id)) {
+        this.state.current_sound.stop()
+      }
       this.state.current_sound.unload()
     }
 
@@ -101,6 +107,7 @@ export class Sound extends React.PureComponent {
       format: ['ogg'],
       html5: true,
       autoplay: false,
+      volume: this.state.volume,
       onload: this.onLoad.bind(this),
       onloaderror: this.onLoadError.bind(this),
       onplay: this.onPlay.bind(this),
@@ -112,7 +119,7 @@ export class Sound extends React.PureComponent {
       onseek: this.onSeek.bind(this),
     })
 
-    sound.volume(this.state.volume)
+    //sound.volume(this.state.volume)
 
     this.setState({
       current_sound: sound,
@@ -139,22 +146,18 @@ export class Sound extends React.PureComponent {
 
   onPlay(sound_id) {
     console.log("on play: " + sound_id)
-    //this.setState({playing: true})
   }
 
   onPause(sound_id) {
     console.log("on pause: " + sound_id)
-    //this.setState({playing: false})
   }
 
   onStop(sound_id) {
     console.log("on stop: " + sound_id)
-    //this.setState({playing: false})
   }
 
   onEnd(sound_id) {
     console.log("on end: " + sound_id)
-    //this.setState({playing: false})
 
     if (this.state.song !== null) {
       historyIncrementPlaycount(this.state.song.id).then(
@@ -185,7 +188,7 @@ export class Sound extends React.PureComponent {
 
   onTimeout() {
 
-    if (this.state.current_sound_id) {
+    if (this.state.current_sound_id !== null && this.state.current_sound !== null) {
       const duration = this.state.current_sound.duration()
       const position = this.state.current_sound.seek()
       this.setState({duration, position})
@@ -196,21 +199,24 @@ export class Sound extends React.PureComponent {
   // button actions
   onPlayClicked() {
 
-    if (!this.state.current_sound_id) {
+    if (this.state.current_sound === null) {
+      console.log("no song currently loaded")
+    } else if (this.state.current_sound_id === null) {
+      // the first time a song is played, record the uid
+      // so that we can pause/resume
       const sound_id = this.state.current_sound.play()
       this.setState({current_sound_id: sound_id, playing:true})
 
     } else {
+      // we have an  sound instance, and an id of a playing sound...
+      // play/pause the current sound
 
       if (this.state.current_sound.playing(this.state.current_sound_id)) {
         this.setState({playing: false})
         this.state.current_sound.pause(this.state.current_sound_id)
-        console.log("is playing: false" )
       } else {
         this.setState({playing: true})
         this.state.current_sound.play(this.state.current_sound_id)
-        console.log("is playing: true" )
-
       }
 
 
@@ -220,8 +226,9 @@ export class Sound extends React.PureComponent {
 
   onSeekEndClicked() {
 
-    if (this.state.current_sound_id) {
+    if (this.state.current_sound_id !== null && this.state.current_sound !== null) {
       const duration = this.state.current_sound.duration()
+      console.log("seek to: " + duration)
       this.state.current_sound.seek(duration - 1)
     }
 
@@ -244,7 +251,7 @@ export class Sound extends React.PureComponent {
 
     this.setState({volume: v})
 
-    if (this.state.current_sound) {
+    if (this.state.current_sound !== null) {
       this.state.current_sound.volume(v)
     }
 
@@ -288,7 +295,6 @@ export class Sound extends React.PureComponent {
         }
 
         new_state['song'] = song || null
-        console.log(song)
 
       }
 
