@@ -41,7 +41,7 @@ class SharedText extends React.Component {
     };
   }
 
-  componentWillMount() {
+  componentDidMount() {
     var that = this;
     ShareMenu.getSharedText((text :string) => {
       if (text && text.length) {

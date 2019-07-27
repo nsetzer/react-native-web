@@ -44,7 +44,7 @@ export class LibraryPage extends React.Component {
         }
     }
 
-    componentWillMount() {
+    componentDidMount() {
 
         if (this.props.db !== null) {
             this.search()

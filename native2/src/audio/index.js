@@ -7,6 +7,10 @@ import AsyncStorage from '@react-native-community/async-storage'
 
 import TrackPlayer from 'react-native-track-player';
 
+if (TrackPlayer === null) {
+    TrackPlayer = {STATE_NONE: null}
+}
+
 var state_map = {}
 state_map[TrackPlayer.STATE_NONE] = "STATE_NONE"
 state_map[TrackPlayer.STATE_PLAYING] = "STATE_PLAYING"
@@ -68,9 +72,15 @@ export function audioLoadQueue() {
         console.log(str)
         // TODO: fix this, there should not be any undefined values
         // in the first place
-        var obj = JSON.parse(str.replace("undefined", "null"))
-        console.log(obj)
-        resolve(obj)
+        if (str !== null) {
+            var obj = JSON.parse(str.replace("undefined", "null"))
+            console.log("successfully loaded queue")
+            resolve(obj)
+        } else {
+            console.log("failed to load queue, no queue found")
+            resolve({index: 0, tracks: [], options: {current_track_id: null}})
+        }
+
     });
 }
 
@@ -125,7 +135,7 @@ class IAudioComponent extends React.Component {
         super(props);
     }
 
-    componentWillMount() {
+    componentDidMount() {
 
         console.log("QUEUE: set up")
 
@@ -185,8 +195,12 @@ class IAudioComponent extends React.Component {
         audioLoadQueue().then(
             async (obj) => {
                 await TrackPlayer.reset()
-                await TrackPlayer.add(obj.tracks);
-                await TrackPlayer.skip(obj.options.current_track_id);
+                if (obj.tracks.length > 0) {
+                    await TrackPlayer.add(obj.tracks);
+                    if (obj.options.current_track_id !== null) {
+                        await TrackPlayer.skip(obj.options.current_track_id);
+                    }
+                }
             },
             (error) => {
 

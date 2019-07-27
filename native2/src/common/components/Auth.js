@@ -83,7 +83,7 @@ class IAuthenticatedComponent extends React.Component {
         }
     }
 
-    componentWillMount() {
+    componentDidMount() {
 
         this.checkAuth()
     }
@@ -115,7 +115,7 @@ class INotAuthenticatedComponent extends React.Component {
         }
     }
 
-    componentWillMount() {
+    componentDidMount() {
 
         this.checkAuth()
     }

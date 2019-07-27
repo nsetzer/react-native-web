@@ -178,7 +178,7 @@ class ISqlDB extends React.Component {
         super(props);
     }
 
-    componentWillMount() {
+    componentDidMount() {
         if (!this.props.db) {
             console.log("loading db")
             this.props.sqldbOpen(dbName, dbSchema)

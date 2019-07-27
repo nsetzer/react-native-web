@@ -110,7 +110,7 @@ class QueuePage extends React.Component {
         }
     }
 
-    componentWillMount() {
+    componentDidMount() {
 
         //this.props.getQueue()
         console.log("queue page: on mount")
