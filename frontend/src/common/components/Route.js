@@ -363,7 +363,7 @@ class ISwitch extends React.Component {
         // which can cause an invalid redirect
         if (this.props.initialized) {
             const location = this.props.redirect || '/'
-            console.log("Redirect to location: " + location)
+            console.log("Redirect to location: " + location + " from " + this.props.location)
             this.props.pushLocation(location)
         }
         return null;

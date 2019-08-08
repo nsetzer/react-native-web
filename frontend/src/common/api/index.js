@@ -72,7 +72,7 @@ export function downloadFile(url, headers={}, params, success=null, failure=null
             if (contentDispo !== null) {
                 // this string can contain multiple semi-colon separated parts
                 // one of those parts could be be 'filename=name;'
-                fileName = contentDispo.match(/filename[^;=\\n]*=((['"]).*?\\2|[^;\\n]*)/)[1];
+                fileName = contentDispo.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)[1];
             }
 
             if (!fileName) {

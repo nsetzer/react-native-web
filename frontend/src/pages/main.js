@@ -18,6 +18,7 @@ import Page4 from './page4'
 import Page4Edit from './page4edit'
 import StoragePage from './storage'
 import QueuePage from './queue'
+import TextPreview from './textpreview'
 
 import {SvgNowPlaying, SvgLibrary, SvgNotes, SvgStorage, SvgSettings, SvgLogout} from '../common/components/svg'
 
@@ -193,6 +194,8 @@ export class MainPage extends React.Component {
                     <Route name='main-switch' path='/u/storage/:root'       ><StoragePage /></Route>
                     <Route name='main-switch' path='/u/storage/:root/:path*'><StoragePage /></Route>
                     <Route name='main-switch' path='/u/queue'          ><QueuePage   /></Route>
+                    <Route name='main-switch' path='/u/preview/:root' ><TextPreview   /></Route>
+                    <Route name='main-switch' path='/u/preview/:root/:path*' ><TextPreview   /></Route>
                 </Switch>
             </NavMenu>
             </View>

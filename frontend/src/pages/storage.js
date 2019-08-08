@@ -9,6 +9,9 @@ import { modalShow, modalHide } from '../redux/actions/modalAction'
 import { env, fsGetPath, fsSearch, downloadFile, uploadFile, storageRevokePublicUri, storageGeneratePublicUri } from '../common/api'
 import { Switch, Route } from '../common/components/Route'
 
+import SyntaxHighlighter from 'react-syntax-highlighter';
+import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+
 import HyperLink from '../common/components/HyperLink'
 
 import {Svg, SvgFile, SvgFolder, SvgMore, SvgMediaError} from '../common/components/svg'
@@ -88,11 +91,63 @@ function hasPreview(data) {
     return (data.encryption !== 'client' && data.encryption !== 'server') && exts[ext]
 }
 
+function hasTextPreview(data) {
+    var lst = data.name.split('.')
+    var ext = lst[lst.length-1].toLowerCase()
+    const exts = {yueattr: true, txt: true, py: true, sh: true}
+    return (data.encryption !== 'client' && data.encryption !== 'server') && exts[ext]
+}
+
 function hasVideoPreview(data) {
     var lst = data.name.split('.')
     var ext = lst[lst.length-1].toLowerCase()
     const exts = {webm: true}
     return (data.encryption !== 'client' && data.encryption !== 'server') && exts[ext]
+}
+
+class TextPreview extends React.Component {
+
+    constructor(props) {
+        super(props);
+
+        console.log(props)
+
+        this.state = {
+            content: "loading"
+        }
+
+        fsGetPath(props.fsroot, props.fspath)
+            .then((response) => {this.setState({content: response.data});})
+            .catch((error) => {console.log(error)});
+
+    }
+
+    render() {
+
+        console.log(this.props)
+        return (
+            <View style={{
+                backgroundColor: "#00000033",
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                zIndex: 20
+            }}>
+            <View style={{
+                flex: 1,
+                alignItems: 'center',
+                justifyContent: 'center',
+            }}>
+                <SyntaxHighlighter style={{width: '200'}}
+                    language="python" style={docco}>
+                    {this.state.content}
+                </SyntaxHighlighter>
+            </View>
+            </View>
+        )
+    }
 }
 
 class ModalDialog extends React.PureComponent {
@@ -183,12 +238,20 @@ class ListItem extends React.PureComponent {
 
     show_preview(accept, reject) {
 
-        var url = (env.baseUrl + '/api/fs/' +
-            this.props.root + '/path/')
+
+        var root = this.props.root;
+        var path;
+
         if (this.props.path !== '') {
-            url += this.props.path + '/'
+            path = this.props.path + '/' + this.props.data.name
+        } else {
+            path = this.props.data.name
         }
-        url += this.props.data.name + '?token=' + this.props.token + "&dl=0"
+
+        var rawurl = (env.baseUrl + '/api/fs/' + root + '/path/' + path)
+        var preview_url = (env.baseUrl + '/u/preview/' + root + '/' + path)
+
+        var url = rawurl + '?token=' + this.props.token + "&dl=0"
 
         if (hasPreview(this.props.data)) {
 
@@ -216,12 +279,21 @@ class ListItem extends React.PureComponent {
                     />
                 </View>
                 )
-        } else {
-            return (
-                <View style={{height: 100, width: 100, backgroundColor: 'white'}}>
-                    <Text>Hello World</Text>
+
+        } else if (hasTextPreview(this.props.data)) {
+            console.log(preview_url)
+            window.open(preview_url, '_blank');
+            reject()
+            return null/*(
+
+                <View style={{maxWidth: '80vw', maxHeight: '80vh', flex:1, justifyContent: 'center', alignItems: 'center'}}>
+                    <TextPreview fsroot={this.props.root} fspath={path}/>
                 </View>
-            )
+                )*/
+        } else {
+            reject()
+            return null
+
         }
     }
 
@@ -617,7 +689,6 @@ export class StoragePage extends React.Component {
 
     onListDirError(error) {
         this.setState({directoryItems: [], parentPath: '', loading: false, loaded: true})
-
     }
 
     onSearchSuccess(response) {

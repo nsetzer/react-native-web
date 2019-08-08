@@ -28,6 +28,7 @@
     "react-native-web": "^0.11.2",
     "react-redux": "^6.0.1",
     "react-scripts": "^2.1.8",
+    "react-syntax-highlighter": "^11.0.2",
     "redux": "^4.0.1",
     "redux-saga": "^1.0.2",
     "resize-observer-polyfill": "^1.5.1"
