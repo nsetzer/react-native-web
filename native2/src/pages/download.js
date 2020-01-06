@@ -208,6 +208,7 @@ class IDownloadComponent extends React.Component {
         // TrackPlayer cannot load tracks with a :
         return s.replace(/[\?\.\:\'\"\\\/\[\]\(\)]/g, '')
     }
+
     _doDownloadInit_processItem(item, token) {
         var file_index = ((item.album_index!==null)?item.album_index + "_":'')
         var file_suffix = "." + item.uid.substring(0, 8) + ".ogg"

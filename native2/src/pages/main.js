@@ -25,6 +25,7 @@ import StoragePage from './storage'
 import SettingsPage from './settings'
 import QueuePage from './queue'
 import { DownloadComponent } from './download'
+import { FetchComponent } from './fetch'
 
 const icon_style = {
     width: 48,
@@ -188,6 +189,7 @@ class MainPage extends React.Component {
                     <View style={{width: "100%"}}>
                         <Header onPress={this.onPress.bind(this)}/>
                         <DownloadComponent />
+                        <FetchComponent />
 
                         <Switch redirect='/u/nowplaying'>
                             <Route name='main-switch' path='/u/nowplaying'><NowPlayingPage/></Route>

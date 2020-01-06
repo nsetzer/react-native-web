@@ -172,10 +172,14 @@ class IAudioComponent extends React.Component {
                 TrackPlayer.CAPABILITY_SKIP_TO_NEXT,
                 TrackPlayer.CAPABILITY_SKIP_TO_PREVIOUS,
             ],
-            compactCapabilities: [
-              TrackPlayer.CAPABILITY_PLAY,
-              TrackPlayer.CAPABILITY_PAUSE,
-            ]
+            //TODO: 2019-12-20 : get backend capabilities working then re-enable this
+            //      APP notification isnt listening to this anyway
+            //      https://github.com/react-native-kit/react-native-track-player/issues/775
+
+            //compactCapabilities: [
+            //  TrackPlayer.CAPABILITY_PLAY,
+            //  TrackPlayer.CAPABILITY_PAUSE,
+            //]
         });
 
         TrackPlayer.addEventListener('playback-track-changed', (obj) => {
